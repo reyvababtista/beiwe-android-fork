@@ -93,6 +93,7 @@ public class DeviceInfo {
 	 * 58: app version 3.2.0, Italian & German translations, remove background location permission,
 	 *      target SDK 30, fix androidx core dependency
 	 * 58: app version 3.2.0, (jz/messaging) Receives messages
+	 * 59: app version 3.2.1, Styles messages, targets SDK 30 (Android 11)
 	 * */
 
 	private static String androidID;
