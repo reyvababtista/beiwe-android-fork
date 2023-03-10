@@ -119,13 +119,12 @@ class GPSListener(private val appContext: Context) : LocationListener {
 
 
         running = true
-        // TODO: reenable after we get the data formatting correct / as dev log item
-        // if (first_instantiation) {
-        //     first_instantiation = false
-        //     val device_info = "GPS GNSS Hardware Model Name: ${locationManager.gnssHardwareModelName}"
-        //     printi(device_info)
-        //     makeDebugLogStatement(device_info)
-        // }
+        if (first_instantiation) {
+            first_instantiation = false
+            val device_info = "GPS GNSS Hardware Model Name: ${locationManager.gnssHardwareModelName}"
+            printi(device_info)
+            makeDebugLogStatement(device_info)
+        }
     }
 
     /** Disable all location updates  */
