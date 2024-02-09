@@ -546,31 +546,54 @@ object PersistentData {
     /*###########################################################################################
     ###################################### FUZZY GPS ############################################
     ###########################################################################################*/
+
     @JvmStatic fun getLatitudeOffset(): Double {
         val latitudeOffset = pref.getFloat(LATITUDE_OFFSET_KEY, 0.0f)
         // create latitude offset if it does not exist
-        return if (latitudeOffset == 0.0f && getUseGpsFuzzing()) {
-            // create random latitude offset between (-1, -.2) or (.2, 1)
-            var newLatitudeOffset = (.2 + Math.random() * 1.6).toFloat()
-            if (newLatitudeOffset > 1)
-                newLatitudeOffset = (newLatitudeOffset - .8f) * -1
-            putCommit(LATITUDE_OFFSET_KEY, newLatitudeOffset)
-            newLatitudeOffset.toDouble()
+        if (latitudeOffset == 0.0f && getUseGpsFuzzing()) {
+            val newLongitudeOffset = generate_lattitude_offset()
+            putCommit(LATITUDE_OFFSET_KEY, newLongitudeOffset)
+            return newLongitudeOffset.toDouble()
         } else {
-            latitudeOffset.toDouble()
+            return latitudeOffset.toDouble()
         }
     }
-    @JvmStatic fun getLongitudeOffset(): Float {
-        val longitudeOffset = pref.getFloat(LONGITUDE_OFFSET_KEY, 0.0f)
-        // create longitude offset if it does not exist
-        return if (longitudeOffset == 0.0f && getUseGpsFuzzing()) {
-            // create random longitude offset between (-180, -10) or (10, 180)
-            var newLongitudeOffset = (10 + Math.random() * 340).toFloat()
-            if (newLongitudeOffset > 180) newLongitudeOffset = (newLongitudeOffset - 170) * -1
-            putCommit(LONGITUDE_OFFSET_KEY, newLongitudeOffset)
-            newLongitudeOffset
-        } else longitudeOffset
+
+    // original comment: create random latitude offset between (-1, -.2) or (.2, 1)
+    @JvmStatic fun generate_lattitude_offset (): Float {
+        // 1.6 * (0 to 1) = 0 to 1.6, +0.2 gives a range of 0.2 to 1.8.
+        var newLatitudeOffset = (.2 + Math.random() * 1.6).toFloat()
+        // if it's greater than 1, subtract 0.8 (range 0.2 to 1), and then change sign
+        if (newLatitudeOffset > 1) {
+            newLatitudeOffset = (newLatitudeOffset - .8f) * -1
+        }
+        return newLatitudeOffset
     }
+
+    @JvmStatic fun getLongitudeOffset(): Float {
+        val longitudeOffset: Float = pref.getFloat(LONGITUDE_OFFSET_KEY, 0.0f)
+        // create longitude offset if it does not exist
+        if (longitudeOffset == 0.0f && getUseGpsFuzzing()) {
+            val newLongitudeOffset: Float = generate_longitude_offset()
+            putCommit(LONGITUDE_OFFSET_KEY, newLongitudeOffset)
+            return newLongitudeOffset
+        } else {
+            return longitudeOffset
+        }
+    }
+
+    // original comment: create random longitude offset between (10, 180), or (-180, -10) or
+    @JvmStatic fun generate_longitude_offset() : Float {
+        // math.random returns a number between 0 and 1, the starting value is between 10 and 350.
+        // if it's between 180 and 350 subtract 170 - output is between 10 and 170
+        // then multiply by -1 to make it negative. so it is between -10 and -170.
+        var newLongitudeOffset = (10 + Math.random() * 340).toFloat()
+        if (newLongitudeOffset > 180) {
+            newLongitudeOffset = (newLongitudeOffset - 170) * -1
+        }
+        return newLongitudeOffset
+    }
+
     @JvmStatic fun setUseGpsFuzzing(useFuzzyGps: Boolean): Boolean { return putCommit(USE_GPS_FUZZING_KEY, useFuzzyGps) }
     @JvmStatic fun getUseGpsFuzzing(): Boolean { return pref.getBoolean(USE_GPS_FUZZING_KEY, false) }
     @JvmStatic fun setUseAnonymizedHashing(useAnonymizedHashing: Boolean): Boolean { return putCommit(EncryptionEngine.USE_ANONYMIZED_HASHING_KEY, useAnonymizedHashing) }
