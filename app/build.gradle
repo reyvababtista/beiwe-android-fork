@@ -142,6 +142,7 @@ Version history:
 81: 3.5.10 - 2 ~features - no more enforcement of phone number permission, consent page now accepts empty
     string, we no longer require phone permissions as an invariant post-registration permission either.
 82: 3.5.11 - Added USE_EXACT_ALARM manifest permission because it crashes without it on Android 14
+83: 3.5.12 - Makes changes to the gps fuzzing math to ensure all numbers are within a 360 degree magnitude.
 
 TODO: we are stalled on the formatting for the hardware information for gps, accel, gyro.
    This probably requires a new data stream.
@@ -169,8 +170,8 @@ android {
         minSdkVersion 23
         multiDexEnabled true
         targetSdkVersion 33
-        versionCode 82       //TODO: update this Beiwe version code for new releases
-        versionName '3.5.11'  //TODO: update this Beiwe version number for new releases
+        versionCode 83       //TODO: update this Beiwe version code for new releases
+        versionName '3.5.12'  //TODO: update this Beiwe version number for new releases
         setProperty("archivesBaseName", "Beiwe-$versionName")
     }
 
