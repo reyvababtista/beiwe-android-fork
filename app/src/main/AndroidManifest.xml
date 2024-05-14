@@ -29,6 +29,14 @@
     <!-- Permissions regarding phone calls -->
     <!-- ignore the error about requiring telephony hardware, we don't, its wholly optional -->
     <uses-permission android:name="android.permission.CALL_PHONE" />
+    <!-- [mapping and anonymizing contacts in call and text logs -->
+    <uses-permission android:name="android.permission.READ_CONTACTS" />
+    <!-- access to the call log -->
+    <uses-permission android:name="android.permission.READ_CALL_LOG" />
+    <!-- texts logging -->
+    <uses-permission android:name="android.permission.READ_SMS" />
+    <uses-permission android:name="android.permission.RECEIVE_MMS" />
+    <uses-permission android:name="android.permission.RECEIVE_SMS" />
 
     <!-- Permission used in android 6+ for being whitelisted for app standby -->
     <uses-permission android:name="android.permission.REQUEST_IGNORE_BATTERY_OPTIMIZATIONS" />
