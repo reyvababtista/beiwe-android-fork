@@ -7,6 +7,7 @@ import org.beiwe.app.printe
 import org.beiwe.app.printi
 import org.beiwe.app.storage.PersistentData
 import org.beiwe.app.storage.TextFileManager
+import org.beiwe.app.ui.utils.MessageNotification
 import org.json.JSONArray
 import org.json.JSONException
 
@@ -44,8 +45,16 @@ class FCMService : FirebaseMessagingService() {
 
         val data = remoteMessage.data
         // for now we only really care about the survey notification type, we may add later types
-        if (data["type"] == "survey") {
+        val notification_type = data["type"]
+        if (notification_type == null) {
+            val errorMsg = "Received push notification with no type."
+            printe(errorMsg)
+            TextFileManager.writeDebugLogStatement(errorMsg)
+            return
+        }
 
+        // handle survey notifications
+        if (notification_type == "survey") {
             // case: device may not have a particular survey.
             // Get the list of survey_ids from the push notification's JSON data
             val notificationSurveyIds: List<String> = try {
@@ -63,6 +72,16 @@ class FCMService : FirebaseMessagingService() {
             // all surveys it received FCM push notification for.  Cases are safely handled, the
             // whole thing runs on a background thread.
             SurveyDownloader.downloadSurveys(applicationContext, notificationSurveyIds)
+        }
+
+        // Message notifications cause the app to show a notification with the message text.
+        if (notification_type == "message") {
+            val message = data["message"]
+            if (message == null) {
+                printe("FCM", "received message push notification with no message")
+                return
+            }
+            MessageNotification.showNotificationMessage(applicationContext, message)
         }
     }
 }

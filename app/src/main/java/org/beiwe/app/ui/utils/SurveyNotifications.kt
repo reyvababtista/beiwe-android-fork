@@ -2,29 +2,151 @@ package org.beiwe.app.ui.utils
 
 import android.annotation.SuppressLint
 import android.app.Notification
-import org.beiwe.app.printe
-import org.beiwe.app.JSONUtils
-import org.beiwe.app.storage.PersistentData
-import org.beiwe.app.ui.utils.SurveyNotifications
-import org.beiwe.app.storage.TextFileManager
-import android.os.Build
-import android.content.Intent
-import org.beiwe.app.R
-import org.beiwe.app.survey.SurveyActivity
-import android.graphics.BitmapFactory
-import android.app.PendingIntent
-import android.app.NotificationManager
-import androidx.core.app.NotificationCompat
 import android.app.NotificationChannel
+import android.app.NotificationManager
+import android.app.PendingIntent
 import android.content.Context
+import android.content.Intent
+import android.graphics.BitmapFactory
 import android.graphics.Color
+import android.os.Build
 import android.service.notification.StatusBarNotification
 import android.util.Log
+import androidx.core.app.NotificationCompat
+import org.beiwe.app.JSONUtils
+import org.beiwe.app.R
+import org.beiwe.app.is_nightmode
 import org.beiwe.app.pending_intent_flag_fix
-import org.json.JSONObject
-import org.beiwe.app.survey.AudioRecorderEnhancedActivity
-import org.json.JSONException
+import org.beiwe.app.printe
+import org.beiwe.app.storage.PersistentData
+import org.beiwe.app.storage.TextFileManager
 import org.beiwe.app.survey.AudioRecorderActivity
+import org.beiwe.app.survey.AudioRecorderEnhancedActivity
+import org.beiwe.app.survey.SurveyActivity
+import org.beiwe.app.ui.user.MainMenuActivity
+import org.json.JSONException
+import org.json.JSONObject
+
+
+val BEIWE_VIBRATION_PATTERN = longArrayOf(0, 1000, 500, 1000)
+
+
+/* Behavior of message notifications:
+* - Notification is not received if the app is force-stopped, but it will be received at some point
+*     after the app is reopened.
+* - If the app is paused the notification is received, but delayed until the app is unpaused.
+* - Message is pulled down and made visible if the app is in the foreground.
+* - Message is ... a normal notification when the app is in the background.
+* - Notifications with the same message in them are replaced by the new notification.
+* - notifications with different messages are displayed as separate notifications.
+* - Notifications do not auto-clear when you open the app. */
+object MessageNotification {
+    private const val CHANNEL_ID = "messages_notification_channel"
+
+    fun showNotificationMessage(appContext: Context, message: String) {
+        // call the appropriate app version.
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            ensureMessagesNotificationChannelExists(appContext)
+            displayMessageNotificationNew(appContext, message)
+        } else
+            displayMessageNotificationOld(appContext, message)
+    }
+
+    // Apps targeting api 26 or later need a notification channel to display notifications
+    private fun ensureMessagesNotificationChannelExists(context: Context) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) { // redundant check to suppress error
+            // if it already exists return early
+            val notificationManager = context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+            if (notificationManager.getNotificationChannel(MessageNotification.CHANNEL_ID) != null)
+                return
+
+            // Originally copied these from an example, these values could change but its fine?
+            val notificationChannel = NotificationChannel(CHANNEL_ID, "Beiwe Messages", NotificationManager.IMPORTANCE_HIGH)
+            notificationChannel.description = "The Beiwe App Special Notifications"
+            notificationChannel.enableLights(true)
+            notificationChannel.lightColor = Color.YELLOW
+            notificationChannel.vibrationPattern = BEIWE_VIBRATION_PATTERN
+            notificationChannel.enableVibration(true)
+            notificationManager.createNotificationChannel(notificationChannel)
+        }
+    }
+
+    private fun displayMessageNotificationNew(appContext: Context, message: String) {
+        //TODO: virtually only this first line that differs, the type is different but almost everything else is the same. find a way to refactor.
+        val notificationBuilder = Notification.Builder(appContext, MessageNotification.CHANNEL_ID)
+        notificationBuilder.setContentTitle(appContext.getString(R.string.survey_notification_app_name))
+        notificationBuilder.setShowWhen(true) // As of API 24 this no longer defaults to true and must be set explicitly
+        notificationBuilder.setTicker(message)
+        notificationBuilder.setContentText(message)
+        notificationBuilder.setSmallIcon(getExclamationMarkIcon(appContext))
+        notificationBuilder.setLargeIcon(BitmapFactory.decodeResource(appContext.resources, getExclamationMarkIcon(appContext)))
+        notificationBuilder.setGroup("messages")
+        notificationBuilder.setContentIntent(thePendingIntent(appContext, message))
+        notificationBuilder.setContentIntent(thePendingIntent(appContext, message))
+        val messageNotification = notificationBuilder.build()
+        val requestCode = message.hashCode()
+        doNotification(appContext, requestCode, messageNotification)
+    }
+
+    private fun displayMessageNotificationOld(appContext: Context, message: String) {
+        //TODO: virtually only this first line that differs, the type is different but almost everything else is the same. find a way to refactor.
+        val notificationBuilder = NotificationCompat.Builder(appContext)
+        notificationBuilder.setContentTitle(appContext.getString(R.string.survey_notification_app_name))
+        notificationBuilder.setShowWhen(true) // As of API 24 this no longer defaults to true and must be set explicitly
+        notificationBuilder.setTicker(message)
+        notificationBuilder.setContentText(message)
+        notificationBuilder.setSmallIcon(getExclamationMarkIcon(appContext))
+        notificationBuilder.setLargeIcon(BitmapFactory.decodeResource(appContext.resources, getExclamationMarkIcon(appContext)))
+        notificationBuilder.setGroup("messages")
+        notificationBuilder.setContentIntent(thePendingIntent(appContext, message))
+        val messageNotification = notificationBuilder.build()
+        val requestCode = message.hashCode()
+        doNotification(appContext, requestCode, messageNotification)
+    }
+
+    // does the actual call to pop up a notification
+    fun doNotification(appContext: Context, requestCode: Int, messageNotification: Notification) {
+        // this is the notification type we always want
+        messageNotification.flags = Notification.FLAG_ONGOING_EVENT
+        val notificationManager = appContext.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+        notificationManager.cancel(requestCode)
+        notificationManager.notify(requestCode, messageNotification)
+
+        if (!notificationManager.areNotificationsEnabled()) {
+            TextFileManager.writeDebugLogStatement("Participant has blocked notifications (3)")
+            Log.e("SurveyNotifications", "Participant has blocked notifications (3)")
+        }
+    }
+
+    // common code for setting up a pending intent that opens the app to the main menu page
+    fun thePendingIntent(appContext: Context, message: String): PendingIntent {
+        // naming everything to keep it clear
+        val activityIntent = mainActivityIntent(appContext, message)
+        // should do nothing when the participant is in the app....
+        val intent_flag = pending_intent_flag_fix(PendingIntent.FLAG_CANCEL_CURRENT)
+        val requestCode = message.hashCode() // duplicated code, 100000% don't care.
+        val pendingActivityIntent = PendingIntent.getActivity(appContext, requestCode, activityIntent, intent_flag)
+        return pendingActivityIntent
+    }
+
+    // common code for setting up a regular intent that opens the app to the main menu page
+    fun mainActivityIntent(appContext: Context, message: String): Intent {
+        val activityIntent = Intent(appContext, MainMenuActivity::class.java)
+        activityIntent.action = message
+        //modifies behavior when the user is already in the app.
+        activityIntent.flags = Intent.FLAG_ACTIVITY_NO_HISTORY
+        return activityIntent
+    }
+
+    // night and dark mode icon handling
+    fun getExclamationMarkIcon(appContext: Context): Int {
+        if (is_nightmode(appContext))
+            return R.drawable.exclamation_mark_white
+        else
+            return R.drawable.exclamation_mark_black
+    }
+}
+
 
 /**The purpose of this class is to deal with all that has to do with Survey Notifications.
  * This is a STATIC method, and is called from the main service.
@@ -97,7 +219,9 @@ object SurveyNotifications {
             notificationBuilder.setLargeIcon(BitmapFactory.decodeResource(appContext.resources, R.drawable.voice_recording_icon))
             notificationBuilder.setGroup(surveyId)
         } else {
-            TextFileManager.writeDebugLogStatement("encountered unknown survey type: " + PersistentData.getSurveyType(surveyId) + ", cannot schedule survey.")
+            TextFileManager.writeDebugLogStatement(
+                "encountered unknown survey type: " + PersistentData.getSurveyType(surveyId) + ", cannot schedule survey."
+            )
             return
         }
         
@@ -222,7 +346,7 @@ object SurveyNotifications {
             notificationChannel.description = "The Beiwe App notification channel"
             notificationChannel.enableLights(true)
             notificationChannel.lightColor = Color.RED
-            notificationChannel.vibrationPattern = longArrayOf(0, 1000, 500, 1000)
+            notificationChannel.vibrationPattern = BEIWE_VIBRATION_PATTERN
             notificationChannel.enableVibration(true)
             notificationManager.createNotificationChannel(notificationChannel)
         }
