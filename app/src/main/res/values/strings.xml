@@ -45,9 +45,10 @@
     <string name="reset_password_url" translatable="false">/set_password</string>
     <string name="graph_url" translatable="false">/graph</string>
     <string name="register_url" translatable="false">/register_user</string>
-    <string name="set_fcm_token" translatable="false">/set_fcm_token</string>
+    <string name="set_fcm_token_url" translatable="false">/set_fcm_token</string>
     <string name="test_notification_url" translatable="false">/test_notification</string>
     <string name="push_survey_url" translatable="false">/send_survey_notification</string>
+    <string name="heartbeat_url" translatable="false">/mobile-heartbeat</string>
 
     <!-- Recording Options Strings -->
     <string name="title_activity_audio_recorder">Make a Voice Recording</string>
@@ -201,6 +202,7 @@
     <string name="create_new_data_files_intent" translatable="false">Create new data files</string>
     <string name="check_for_new_surveys_intent" translatable="false">Check for new surveys</string>
     <string name="check_for_new_device_settings_intent" translatable="false">Check for new device settings</string>
+    <string name="heartbeat_intent" translatable="false">Check for new device settings</string>
 
     <string name="run_wifi_log" translatable="false">Wifi Log</string>
     <string name="encrypt_ambient_audio_file" translatable="false">Encrypt and restart ambient audio recording</string>

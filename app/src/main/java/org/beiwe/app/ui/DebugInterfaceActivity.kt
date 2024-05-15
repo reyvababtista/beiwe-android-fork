@@ -506,11 +506,11 @@ class DebugInterfaceActivity : SessionActivity() {
     }
 
     fun sendTestNotification(view: View?) {
-        PostRequest.sendTestNotification()
+        PostRequest.sendToTestNotificationEndpoint()
     }
 
     fun sendSurveyNotification(view: View?) {
-        PostRequest.sendSurveyNotification()
+        PostRequest.sendToSurveyNotificationEndpoint()
     }
 
     fun clearNotifications(view: View?) {

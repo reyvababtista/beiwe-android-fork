@@ -526,6 +526,7 @@ class MainService : Service() {
         // These are currently syncronous (block) unless they say otherwise, profiling was done
         // on a Pixel 6. No-action always measures 0-1ms.
         do_new_files_check(now)  // always 10s of ms (30-70ms)
+        do_heartbeat_check(now)  // always 10s of ms (30-70ms)
         accelerometer_logic(now)
         gyro_logic(now)  // on action ~20-50ms, off action 10-20ms
         gps_logic(now)  // on acction <10-20ms, off action ~2ms (yes two)
@@ -669,6 +670,15 @@ class MainService : Service() {
                 PostRequest.sendFCMInstanceID(fcm_token)
         }
         do_an_event_session_check(now, event_string, FCM_TIMER, send_fcm_action)
+    }
+
+    fun do_heartbeat_check(now: Long) {
+        val event_string = getString(R.string.heartbeat_intent)
+        val periodicity = 300L // 5 minutes
+        val heartbeat_action = {
+            PostRequest.sendHeartbeat()
+        }
+        do_an_event_session_check(now, event_string, periodicity, heartbeat_action)
     }
 
     fun do_new_files_check(now: Long) {

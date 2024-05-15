@@ -319,6 +319,7 @@ public class PostRequest {
 		return response;
 	}
 	
+	// hits /set_fcm_token, sends the FCM token to the server.
 	public static void sendFCMInstanceID (String token) {
 		if (!NetworkUtility.canUpload(appContext)) {
 			return;
@@ -327,13 +328,30 @@ public class PostRequest {
 		Thread fcmInstanceIDThread = new Thread(new Runnable() {
 			@Override
 			public void run () {
-				doNotificationRequest(addWebsitePrefix(appContext.getString(R.string.set_fcm_token)), PostRequest.makeParameter("fcm_token", finalToken));
+				doNotificationRequest(addWebsitePrefix(appContext.getString(R.string.set_fcm_token_url)), PostRequest.makeParameter("fcm_token", finalToken));
 			}
 		}, "fcm_instance_id_thread");
 		fcmInstanceIDThread.start();
 	}
 	
-	public static void sendTestNotification () {
+	// hits the heartbeat endpoint
+	public static void sendHeartbeat () {
+		if (!NetworkUtility.canUpload(appContext)) {
+			return;
+		}
+		Thread heartbeatThread = new Thread(new Runnable() {
+			@Override
+			public void run () {
+				doNotificationRequest(addWebsitePrefix(appContext.getString(R.string.heartbeat_url)), "");
+			}
+		}, "fcm_instance_id_thread");
+		heartbeatThread.start();
+	}
+	
+	
+	// debugging function, is attached to a button, hits /test_notification
+	// unrelated to heartbeat or message notifications.
+	public static void sendToTestNotificationEndpoint () {
 		if (!NetworkUtility.canUpload(appContext)) {
 			return;
 		}
@@ -346,7 +364,9 @@ public class PostRequest {
 		sendNotificationThread.start();
 	}
 	
-	public static void sendSurveyNotification () {
+	// debugging function, is attached to a button, hits /send_survey_notification
+	// unrelated to heartbeat or message notifications.
+	public static void sendToSurveyNotificationEndpoint () {
 		if (!NetworkUtility.canUpload(appContext)) {
 			return;
 		}
@@ -359,12 +379,13 @@ public class PostRequest {
 		sendNotificationThread.start();
 	}
 	
+	// runs a very simple HTTP request, no parameters, no error is raised if it fails
 	private static void doNotificationRequest (String url, String parameters) {
 		HttpsURLConnection connection;
 		try {
 			connection = setupHTTP(parameters, new URL(url), null);
 			if (300 <= connection.getResponseCode())
-				Log.e("doNotificationRequest", "Response code: " + connection.getResponseCode());
+				Log.e("simple_request", "url:" +url + ", Response code: " + connection.getResponseCode());
 		} catch (IOException e) {
 			e.printStackTrace();
 			return;  // return so connection.disconnect() cannot error
