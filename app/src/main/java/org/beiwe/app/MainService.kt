@@ -39,6 +39,7 @@ const val NOTIFICATION_CHANNEL_NAME = "Beiwe Data Collection" // user facing nam
 // Timer constants
 const val FCM_TIMER = 1000L * 60 * 30 // 30 minutes between sending fcm checkins
 const val DEVICE_SETTINGS_UPDATE_PERIODICITY = 1000L * 60 * 30  // 30 between checking for updated device settings updates
+const val HEARTBEAT_TIMER = 1000L * 60 * 5 // 5 minutes between sending heartbeats
 
 // set our repeating timers to 30 seconds (threadhandler is offset by half the period)
 const val FOREGROUND_SERVICE_RESTART_PERIODICITY = 1000L * 30
@@ -68,11 +69,13 @@ class MainService : Service() {
     val background_handlerThread = HandlerThread("background_handler_thread")
     var background_handler: Handler
     var background_looper: Looper
+    var hasInitializedOnce = false
 
     init {
         background_handlerThread.start()
         background_looper = background_handlerThread.looper
         background_handler = Handler(background_looper)
+
     }
 
     /*##############################################################################################
@@ -111,7 +114,12 @@ class MainService : Service() {
 
         // dispatch the ThreadHandler based run_all_app_logic call with a 1/2 duration offset.
         background_handler.postDelayed(periodic_run_app_logic, THREADHANDLER_PERIODICITY / 2)
-        PersistentData.appOnServiceStart = Date(System.currentTimeMillis()).toLocaleString()
+        val start_time = Date(System.currentTimeMillis()).toLocaleString()
+        PersistentData.appOnServiceStart = start_time
+        if (!this.hasInitializedOnce) {
+            PersistentData.appOnServiceStartFirstRun = start_time
+            this.hasInitializedOnce = true
+        }
     }
 
     // namespace hack, see comment
@@ -533,7 +541,7 @@ class MainService : Service() {
         ambient_audio_logic(now)  // asynchronous when stopping because it has to encrypt
         do_fcm_upload_logic_check(now)  // asynchronous, runs network request on a thread.
         do_wifi_logic_check(now)  // on action <10-40ms
-        do_upload_logic_check(now)  // asynchronous, runs network request on a threa, single digit ms.
+        do_upload_logic_check(now)  // asynchronous, runs network request on a thread, single digit ms.
         do_new_surveys_check(now)  // asynchronous, runs network request on a thread, single digit ms.
         do_new_device_settings_check(now) // asynchronous, runs network request on a thread, single digit ms.
         do_survey_notifications_check(now)  // 1 survey notification <10-30ms.
@@ -674,7 +682,7 @@ class MainService : Service() {
 
     fun do_heartbeat_check(now: Long) {
         val event_string = getString(R.string.heartbeat_intent)
-        val periodicity = 300L // 5 minutes
+        val periodicity = HEARTBEAT_TIMER
         val heartbeat_action = {
             PostRequest.sendHeartbeat()
         }

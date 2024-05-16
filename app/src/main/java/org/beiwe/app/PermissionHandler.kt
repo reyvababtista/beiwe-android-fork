@@ -6,6 +6,7 @@ import android.content.pm.PackageManager
 import android.os.Build
 import android.os.PowerManager
 import android.provider.Settings
+import org.beiwe.app.networking.NetworkUtility
 import org.beiwe.app.storage.PersistentData
 import org.json.JSONException
 import org.json.JSONObject
@@ -336,6 +337,8 @@ object PermissionHandler {
 
         permissions.put("time_locale", time_locale + " " + DeviceInfo.timeZoneInfo())
         permissions.put("is_registered", PersistentData.getIsRegistered())
+        permissions.put("can_upload", NetworkUtility.canUpload(context))
+        permissions.put("allow_upload_over_cellular", PersistentData.getAllowUploadOverCellularData())
 
         // a bunch of app state reporting
         permissions.put("most_recent_activity_OnCreate", PersistentData.appOnCreateActivity)
@@ -344,6 +347,7 @@ object PermissionHandler {
         permissions.put("most_recent_activity_OnServiceBound", PersistentData.appOnServiceBoundActivity)
         permissions.put("most_recent_activity_OnServiceUnBound", PersistentData.appOnServiceUnboundActivity)
         permissions.put("most_recent_service_start", PersistentData.appOnServiceStart)
+        permissions.put("most_recent_service_start_first_run", PersistentData.appOnServiceStartFirstRun)
         permissions.put("most_recent_run_all_logic", PersistentData.appOnRunAllLogic)
         permissions.put("most_recent_service_start_command", PersistentData.serviceStartCommand)
         permissions.put("most_recent_service_on_unbind", PersistentData.serviceOnUnbind)
@@ -361,6 +365,8 @@ object PermissionHandler {
         permissions.put("most_recent_gps_stop", PersistentData.gpsStop)
         permissions.put("most_recent_gyroscope_start", PersistentData.gyroscopeStart)
         permissions.put("most_recent_gyroscope_stop", PersistentData.gyroscopeStop)
+        permissions.put("most_recent_upload_attempt", PersistentData.appUploadAttempt)
+        permissions.put("most_recent_upload_start", PersistentData.appUploadStart)
 
         // the normal permissions
         permissions.put("permission_access_background_location", checkAccessBackgroundLocation(context))

@@ -26,6 +26,7 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.util.Date;
 
 import javax.net.ssl.HttpsURLConnection;
 
@@ -321,9 +322,6 @@ public class PostRequest {
 	
 	// hits /set_fcm_token, sends the FCM token to the server.
 	public static void sendFCMInstanceID (String token) {
-		if (!NetworkUtility.canUpload(appContext)) {
-			return;
-		}
 		final String finalToken = token;
 		Thread fcmInstanceIDThread = new Thread(new Runnable() {
 			@Override
@@ -336,9 +334,6 @@ public class PostRequest {
 	
 	// hits the heartbeat endpoint
 	public static void sendHeartbeat () {
-		if (!NetworkUtility.canUpload(appContext)) {
-			return;
-		}
 		Thread heartbeatThread = new Thread(new Runnable() {
 			@Override
 			public void run () {
@@ -352,9 +347,6 @@ public class PostRequest {
 	// debugging function, is attached to a button, hits /test_notification
 	// unrelated to heartbeat or message notifications.
 	public static void sendToTestNotificationEndpoint () {
-		if (!NetworkUtility.canUpload(appContext)) {
-			return;
-		}
 		Thread sendNotificationThread = new Thread(new Runnable() {
 			@Override
 			public void run () {
@@ -367,9 +359,6 @@ public class PostRequest {
 	// debugging function, is attached to a button, hits /send_survey_notification
 	// unrelated to heartbeat or message notifications.
 	public static void sendToSurveyNotificationEndpoint () {
-		if (!NetworkUtility.canUpload(appContext)) {
-			return;
-		}
 		Thread sendNotificationThread = new Thread(new Runnable() {
 			@Override
 			public void run () {
@@ -401,6 +390,9 @@ public class PostRequest {
 	
 	/** Uploads all available files on a separate thread. */
 	public static void uploadAllFiles () {
+		// MOST_RECENT_UPLOAD_ATTEMPT
+		PersistentData.setAppUploadAttempt(new Date(System.currentTimeMillis()).toLocaleString());
+		
 		// determine if you are allowed to upload over WiFi or cellular data, return if not.
 		if (!NetworkUtility.canUpload(appContext)) {
 			return;
@@ -421,6 +413,8 @@ public class PostRequest {
 	 * Files get deleted as soon as a 200 OK code in received from the server. */
 	private static void doUploadAllFiles () {
 		synchronized (FILE_UPLOAD_LOCK) {
+			PersistentData.setAppUploadStart(new Date(System.currentTimeMillis()).toLocaleString());
+			
 			//long stopTime = System.currentTimeMillis() + PersistentData.getUploadDataFilesFrequencyMilliseconds();
 			long stopTime = System.currentTimeMillis() + 1000 * 60 * 60; //One hour to upload files
 			String[] files = TextFileManager.getAllUploadableFiles();

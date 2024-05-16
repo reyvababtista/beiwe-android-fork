@@ -80,9 +80,12 @@ const val MOST_RECENT_ONRESUME_ACTIVITY_STATE = "most_recent_onresume_activity_s
 const val MOST_RECENT_ONPAUSE_ACTIVITY_STATE = "most_recent_onresume_activity_state"
 const val MOST_RECENT_ONSERVICEBOUND_ACTIVITY_STATE = "most_recent_onservecbound_activity_state"
 const val MOST_RECENT_ONSERVICEUNBOUND_ACTIVITY_STATE = "most_recent_onservecbound_activity_state"
+const val MOST_RECENT_UPLOAD_ATTEMPT = "most_recent_upload_attempt"
+const val MOST_RECENT_UPLOAD_START = "most_recent_upload_start"
 
 // todo add on trim memory and on configuration change
 const val MOST_RECENT_SERVICE_START = "most_recent_service_start"
+const val MOST_RECENT_SERVICE_START_FIRST_RUN = "most_recent_service_start_initial"
 const val MOST_RECENT_SERVICE_RUN_ALL_LOGIC = "most_recent_run_all_logic"
 const val MOST_RECENT_SERVICE_ON_START_COMMAND = "most_recent_on_start_command"
 const val MOST_RECENT_SERVICE_ON_UNBIND = "most_recent_on_unbind"
@@ -219,6 +222,9 @@ object PersistentData {
     @JvmStatic var appOnServiceStart: String
         get() = pref.getString(MOST_RECENT_SERVICE_START, "")?: ""
         set(value) = putCommit(MOST_RECENT_SERVICE_START, value)
+    @JvmStatic var appOnServiceStartFirstRun: String
+        get() = pref.getString(MOST_RECENT_SERVICE_START_FIRST_RUN, "")?: ""
+        set(value) = putCommit(MOST_RECENT_SERVICE_START_FIRST_RUN, value)
 
     // app activity recent events
     @JvmStatic var appOnServiceBoundActivity: String
@@ -268,6 +274,12 @@ object PersistentData {
     @JvmStatic var gyroscopeStop: String
         get() =  pref.getString(MOST_RECENT_GYROSCOPE_STOP, "")?: ""
         set(value) =  putCommit(MOST_RECENT_GYROSCOPE_STOP, value)
+    @JvmStatic var appUploadAttempt: String
+        get() = pref.getString(MOST_RECENT_UPLOAD_ATTEMPT, "")?: ""
+        set(value) = putCommit(MOST_RECENT_UPLOAD_ATTEMPT, value)
+    @JvmStatic var appUploadStart: String
+        get() = pref.getString(MOST_RECENT_UPLOAD_START, "")?: ""
+        set(value) = putCommit(MOST_RECENT_UPLOAD_START, value)
 
     @JvmStatic var registrationPhoneNumberEverPrompted: Boolean
         get() =  pref.getBoolean(REGISTRATION_PHONE_NUMBER_EVER_PROMPTED, false)
