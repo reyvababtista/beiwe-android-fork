@@ -143,7 +143,9 @@ Version history:
     string, we no longer require phone permissions as an invariant post-registration permission either.
 82: 3.5.11 - Added USE_EXACT_ALARM manifest permission because it crashes without it on Android 14
 83: 3.5.12 - Makes changes to the gps fuzzing math to ensure all numbers are within a 360 degree magnitude.
-84: 3.6.0 - adds new message receiving push notification feature.
+84: 3.6.0 - adds new message receiving push notification feature, adds app-to-server heartbeat,
+    adds several extra datapoints of app activity like last upload attempt, fixes bug where fcm
+    token was gated by the no-cellular-upload flag.
 
 TODO: we are stalled on the formatting for the hardware information for gps, accel, gyro.
    This probably requires a new data stream.
