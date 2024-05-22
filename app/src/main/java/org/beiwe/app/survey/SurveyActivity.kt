@@ -165,8 +165,10 @@ class SurveyActivity : SessionActivity(), OnGoToNextQuestionListener, OnSubmitBu
         Toast.makeText(applicationContext, toastMsg, Toast.LENGTH_LONG).show()
 
         // Close the Activity
-        startActivity(Intent(applicationContext, MainMenuActivity::class.java))
         dismissNotification(applicationContext, surveyId!!)
+        val activityIntent = Intent(applicationContext, MainMenuActivity::class.java)
+        activityIntent.flags = Intent.FLAG_ACTIVITY_CLEAR_TOP
+        startActivity(activityIntent)
         finish()
     }
 }

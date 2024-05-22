@@ -41,8 +41,6 @@ val READ_PHONE_NUMBERS_PERMISSION = if (Build.VERSION.SDK_INT >= Build.VERSION_C
     Manifest.permission.READ_PHONE_STATE
 }
 
-
-
 /**Activity prompts the user for the above-determined READ_PHONE_NUMBERS_PERMISSION _once_. */
 
 @SuppressLint("ShowToast")
@@ -53,7 +51,6 @@ class RegisterActivity : RunningBackgroundServiceActivity() {
     private var newPasswordInput: EditText? = null
     private var confirmNewPasswordInput: EditText? = null
     var handler: Handler? = null
-    var self: RegisterActivity? = null  // what on earth is this doing
 
     // state flags
     private var aboutToResetFalseActivityReturn = false
@@ -64,7 +61,6 @@ class RegisterActivity : RunningBackgroundServiceActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_register)
         handler = Handler(Looper.getMainLooper())
-        self = this
         if (!BuildConfig.CUSTOMIZABLE_SERVER_URL) {
             val serverUrlCaption = findViewById<View>(R.id.serverUrlCaption) as TextView
             val serverUrlInput = findViewById<View>(R.id.serverUrlInput) as EditText

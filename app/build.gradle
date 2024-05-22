@@ -145,7 +145,11 @@ Version history:
 83: 3.5.12 - Makes changes to the gps fuzzing math to ensure all numbers are within a 360 degree magnitude.
 84: 3.6.0 - adds new message receiving push notification feature, adds app-to-server heartbeat,
     adds several extra datapoints of app activity like last upload attempt, fixes bug where fcm
-    token was gated by the no-cellular-upload flag.
+    token was gated by the no-cellular-upload flag. Adds behavior to block survey notifications when
+    that survey was displayed in the past 15 minutes. Adds an automatic checker to the main menu
+    to update the list of surveys every second to reflect the status of active push notifications.
+    Fixes bug where the back stack was incorrectly updated after a survey was completed causing the
+    Main Menu to be present in the back stack.
 
 TODO: we are stalled on the formatting for the hardware information for gps, accel, gyro.
    This probably requires a new data stream.

@@ -61,7 +61,7 @@ const val UPLOAD_DATA_FILES_FREQUENCY_SECONDS = "upload_data_files_frequency_sec
 const val VOICE_RECORDING_MAX_TIME_LENGTH_SECONDS = "voice_recording_max_time_length_seconds"
 const val WIFI_LOG_FREQUENCY_SECONDS = "wifi_log_frequency_seconds"
 const val SURVEY_IDS = "survey_ids"
-const val LastRequestedPermission = "last_requested_permission"
+const val LAST_REQUESTED_PERMISSION = "last_requested_permission"
 
 const val ABOUT_PAGE_TEXT_KEY = "about_page_text"
 const val CALL_CLINICIAN_BUTTON_TEXT_KEY = "call_clinician_button_text"
@@ -83,7 +83,6 @@ const val MOST_RECENT_ONSERVICEUNBOUND_ACTIVITY_STATE = "most_recent_onservecbou
 const val MOST_RECENT_UPLOAD_ATTEMPT = "most_recent_upload_attempt"
 const val MOST_RECENT_UPLOAD_START = "most_recent_upload_start"
 
-// todo add on trim memory and on configuration change
 const val MOST_RECENT_SERVICE_START = "most_recent_service_start"
 const val MOST_RECENT_SERVICE_START_FIRST_RUN = "most_recent_service_start_initial"
 const val MOST_RECENT_SERVICE_RUN_ALL_LOGIC = "most_recent_run_all_logic"
@@ -186,8 +185,8 @@ object PersistentData {
     // IS_REGISTERED
     @JvmStatic fun getIsRegistered(): Boolean { return pref.getBoolean(IS_REGISTERED, false) }
     @JvmStatic fun setIsRegistered(value: Boolean) { putCommit(IS_REGISTERED, value) }
-    @JvmStatic fun setLastRequestedPermission(value: String) { putCommit(LastRequestedPermission, value) }
-    @JvmStatic fun getLastRequestedPermission(): String { return pref.getString(LastRequestedPermission, "")?: "" }
+    @JvmStatic fun setLastRequestedPermission(value: String) { putCommit(LAST_REQUESTED_PERMISSION, value) }
+    @JvmStatic fun getLastRequestedPermission(): String { return pref.getString(LAST_REQUESTED_PERMISSION, "")?: "" }
     @JvmStatic fun getTakingSurvey(): Boolean { return pref.getBoolean(IS_TAKING_SURVEY, false) }
     @JvmStatic fun setTakingSurvey() { putCommit(IS_TAKING_SURVEY, true) }
     @JvmStatic fun setNotTakingSurvey() { putCommit(IS_TAKING_SURVEY, false) }
@@ -383,6 +382,8 @@ object PersistentData {
     @JvmStatic fun setMostRecentAlarmTime(identifier: String, time: Long) { putCommit("$identifier-prior_alarm", time) }
     @JvmStatic fun getMostRecentAlarmTime(identifier: String): Long { return pref.getLong("$identifier-prior_alarm", 0) }
     // we want default to be 0 so that checks "is this value less than the current expected value" (eg "did this timer event pass already")
+
+
 
     /*###########################################################################################
     ################################### Text Strings ############################################
