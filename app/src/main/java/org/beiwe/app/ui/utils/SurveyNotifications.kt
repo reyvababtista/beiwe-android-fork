@@ -163,6 +163,8 @@ object SurveyNotifications {
 
         val idsOfStoredSurveys = JSONUtils.jsonArrayToStringList(PersistentData.getSurveyIdsJsonArray())
         for (surveyId in surveyIds) {
+
+            // displaySurveyNotification handle's android version details.
             if (idsOfStoredSurveys.contains(surveyId)) {
                 displaySurveyNotification(appContext, surveyId)
             } else {
@@ -383,6 +385,7 @@ object SurveyNotifications {
         } catch (e: JSONException) {
             e.printStackTrace()
         }
+
         return AudioRecorderActivity::class.java
     }
 }

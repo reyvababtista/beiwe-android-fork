@@ -64,7 +64,7 @@ class FCMService : FirebaseMessagingService() {
                 val errorMsg = "received unparsable push notification for new surveys"
                 printe(errorMsg)
                 TextFileManager.writeDebugLogStatement(errorMsg)
-                // exit function uarly if the json was invalid
+                // exit function early if the json was invalid
                 return
             }
             // this call to downloadSurveys will run the full download, update, schedule, and show
