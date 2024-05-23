@@ -20,7 +20,7 @@ import io.sentry.android.AndroidSentryClientFactory
 import io.sentry.dsn.InvalidDsnException
 import org.beiwe.app.PermissionHandler.checkBluetoothPermissions
 import org.beiwe.app.PermissionHandler.confirmBluetooth
-import org.beiwe.app.PermissionHandler.confirmCalls
+import org.beiwe.app.PermissionHandler.confirmCallLogging
 import org.beiwe.app.PermissionHandler.confirmTexts
 import org.beiwe.app.listeners.*
 import org.beiwe.app.networking.PostRequest
@@ -153,9 +153,9 @@ class MainService : Service() {
         } else if (PersistentData.getTextsEnabled()) {
             sendBroadcast(Timer.checkForSMSEnabledIntent)
         }
-        if (confirmCalls(applicationContext))
+        if (confirmCallLogging(applicationContext))
             startCallLogger()
-        else if (PersistentData.getCallsEnabled())
+        else if (PersistentData.getCallLoggingEnabled())
             sendBroadcast(Timer.checkForCallsEnabledIntent)
 
         // Only do the following if the device is registered
@@ -400,10 +400,10 @@ class MainService : Service() {
                     timer!!.setupExactSingleAlarm(30000L, Timer.checkForSMSEnabledIntent)
             }
             // logic for the call (metadata) logger
-            if (broadcastAction == applicationContext.getString(R.string.check_for_calls_enabled)) {
-                if (confirmCalls(applicationContext)) {
+            if (broadcastAction == applicationContext.getString(R.string.check_for_call_log_enabled)) {
+                if (confirmCallLogging(applicationContext)) {
                     startCallLogger()
-                } else if (PersistentData.getCallsEnabled())
+                } else if (PersistentData.getCallLoggingEnabled())
                     timer!!.setupExactSingleAlarm(30000L, Timer.checkForCallsEnabledIntent)
             }
 
@@ -724,8 +724,7 @@ class MainService : Service() {
             var app_state_says_on = PersistentData.getSurveyNotificationState(surveyId)
             var alarm_in_past = PersistentData.getMostRecentSurveyAlarmTime(surveyId) < now
 
-            // we don't currently have logic to determine if a notification is actually visible,
-            // the behavior is that it ... replaces all the notifications.  we can make this better.
+            // the behavior is that it ... replaces the notification.
             if ((app_state_says_on || alarm_in_past) && !isNotificationActive(applicationContext, surveyId)) {
                 // this calls PersistentData.setSurveyNotificationState
                 displaySurveyNotification(applicationContext, surveyId)
@@ -916,7 +915,7 @@ class MainService : Service() {
             filter.addAction(applicationContext.getString(R.string.create_new_data_files_intent))
             filter.addAction(applicationContext.getString(R.string.check_for_new_surveys_intent))
             filter.addAction(applicationContext.getString(R.string.check_for_sms_enabled))
-            filter.addAction(applicationContext.getString(R.string.check_for_calls_enabled))
+            filter.addAction(applicationContext.getString(R.string.check_for_call_log_enabled))
             filter.addAction(applicationContext.getString(R.string.check_if_ambient_audio_recording_is_enabled))
             filter.addAction(applicationContext.getString(R.string.fcm_upload))
             filter.addAction(applicationContext.getString(R.string.check_for_new_device_settings_intent))

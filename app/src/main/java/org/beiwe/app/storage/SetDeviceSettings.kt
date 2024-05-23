@@ -3,7 +3,6 @@ package org.beiwe.app.storage
 import org.beiwe.app.MainService
 import org.beiwe.app.networking.PostRequest
 import org.beiwe.app.printe
-import org.beiwe.app.printw
 import org.json.JSONException
 import org.json.JSONObject
 
@@ -18,7 +17,7 @@ object SetDeviceSettings {
         enablement_change = enablement_change or PersistentData.setAccelerometerEnabled(deviceSettings.getBoolean("accelerometer"))
         enablement_change = enablement_change or PersistentData.setGyroscopeEnabled(deviceSettings.getBoolean("gyro"))
         enablement_change = enablement_change or PersistentData.setGpsEnabled(deviceSettings.getBoolean("gps"))
-        enablement_change = enablement_change or PersistentData.setCallsEnabled(deviceSettings.getBoolean("calls"))
+        enablement_change = enablement_change or PersistentData.setCallLoggingEnabled(deviceSettings.getBoolean("calls"))
         enablement_change = enablement_change or PersistentData.setTextsEnabled(deviceSettings.getBoolean("texts"))
         PersistentData.setWifiEnabled(deviceSettings.getBoolean("wifi"))  // wifi doesn't have any active state, can ignore.
         enablement_change = enablement_change or PersistentData.setBluetoothEnabled(deviceSettings.getBoolean("bluetooth"))

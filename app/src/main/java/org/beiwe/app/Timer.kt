@@ -87,7 +87,7 @@ class Timer(mainService: MainService) {
         createNewDataFilesIntent = setupIntent(appContext.getString(R.string.create_new_data_files_intent))
         checkForNewSurveysIntent = setupIntent(appContext.getString(R.string.check_for_new_surveys_intent))
         checkForSMSEnabledIntent = setupIntent(appContext.getString(R.string.check_for_sms_enabled))
-        checkForCallsEnabledIntent = setupIntent(appContext.getString(R.string.check_for_calls_enabled))
+        checkForCallsEnabledIntent = setupIntent(appContext.getString(R.string.check_for_call_log_enabled))
         checkIfAmbientAudioRecordingIsEnabledIntent = setupIntent(appContext.getString(R.string.check_if_ambient_audio_recording_is_enabled))
         sendCurrentFCMTokenIntent = setupIntent(appContext.getString(R.string.fcm_upload))
         checkForNewDeviceSettingsIntent = setupIntent(appContext.getString(R.string.check_for_new_device_settings_intent))

@@ -266,7 +266,7 @@ public class TextFileManager {
 			appContext, "textsLog", SmsSentLogger.header, false, false, true, !PersistentData.getTextsEnabled()
 		);
 		callLog = new TextFileManager(
-			appContext, "callLog", CallLogger.header, false, false, true, !PersistentData.getCallsEnabled()
+			appContext, "callLog", CallLogger.header, false, false, true, !PersistentData.getCallLoggingEnabled()
 		);
 		powerStateLog = new TextFileManager(
 			appContext, "powerState", PowerStateListener.header, false, false, true, !PersistentData.getPowerStateEnabled()

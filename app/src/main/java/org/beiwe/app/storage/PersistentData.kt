@@ -318,8 +318,8 @@ object PersistentData {
     @JvmStatic fun setAmbientAudioCollectionIsEnabled(enabled: Boolean): Boolean { return putCommit(AMBIENT_AUDIO_ENABLED, enabled) }
     @JvmStatic fun getBluetoothEnabled(): Boolean { return pref.getBoolean(BLUETOOTH_ENABLED, false) }
     @JvmStatic fun setBluetoothEnabled(enabled: Boolean): Boolean { return putCommit(BLUETOOTH_ENABLED, enabled) }
-    @JvmStatic fun getCallsEnabled(): Boolean { return pref.getBoolean(CALLS_ENABLED, false) }
-    @JvmStatic fun setCallsEnabled(enabled: Boolean): Boolean { return putCommit(CALLS_ENABLED, enabled) }
+    @JvmStatic fun getCallLoggingEnabled(): Boolean { return pref.getBoolean(CALLS_ENABLED, false) }
+    @JvmStatic fun setCallLoggingEnabled(enabled: Boolean): Boolean { return putCommit(CALLS_ENABLED, enabled) }
     @JvmStatic fun getGpsEnabled(): Boolean { return pref.getBoolean(GPS_ENABLED, false) }
     @JvmStatic fun setGpsEnabled(enabled: Boolean): Boolean { return putCommit(GPS_ENABLED, enabled) }
     @JvmStatic fun getGyroscopeEnabled(): Boolean { return pref.getBoolean(GYROSCOPE_ENABLED, false) }

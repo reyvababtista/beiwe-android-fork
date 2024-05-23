@@ -158,7 +158,7 @@ class DebugInterfaceActivity : SessionActivity() {
         printi("Debug.DataToggles", "Accelerometer: " + PersistentData.getAccelerometerEnabled().toString() )
         printi("Debug.DataToggles", "Gyroscope: " + PersistentData.getGyroscopeEnabled().toString() )
         printi("Debug.DataToggles", "GPS: " + PersistentData.getGpsEnabled().toString() )
-        printi("Debug.DataToggles", "Calls: " + PersistentData.getCallsEnabled().toString() )
+        printi("Debug.DataToggles", "Calls: " + PersistentData.getCallLoggingEnabled().toString() )
         printi("Debug.DataToggles", "Texts: " + PersistentData.getTextsEnabled().toString() )
         printi("Debug.DataToggles", "WiFi: " + PersistentData.getWifiEnabled().toString() )
         printi("Debug.DataToggles", "Bluetooth: " + PersistentData.getBluetoothEnabled().toString() )
@@ -202,7 +202,7 @@ class DebugInterfaceActivity : SessionActivity() {
         else
             printe("features", "Gps Disabled.")
 
-        if (PersistentData.getCallsEnabled())
+        if (PersistentData.getCallLoggingEnabled())
             printi("features", "Calls Enabled.")
         else
             printe("features", "Calls Disabled.")
@@ -255,7 +255,7 @@ class DebugInterfaceActivity : SessionActivity() {
         else
             printe("permissions", "BluetoothAdmin disabled.")
 
-        if (PermissionHandler.checkAccessCallPhone(applicationContext))
+        if (PermissionHandler.checkCanMakePhoneCall(applicationContext))
             printi("permissions", "CallPhone enabled.")
         else
             printe("permissions", "CallPhone disabled.")

@@ -140,10 +140,6 @@ object PermissionHandler {
         return context.checkSelfPermission(Manifest.permission.BLUETOOTH_SCAN) == PERMISSION_GRANTED
     }
 
-    fun checkAccessCallPhone(context: Context): Boolean {
-        return context.checkSelfPermission(Manifest.permission.CALL_PHONE) == PERMISSION_GRANTED
-    }
-
     fun checkAccessReadCallLog(context: Context): Boolean {
         return context.checkSelfPermission(Manifest.permission.READ_CALL_LOG) == PERMISSION_GRANTED
     }
@@ -188,6 +184,10 @@ object PermissionHandler {
             true
     }
 
+    fun checkCanMakePhoneCall(context: Context): Boolean {
+        return context.checkSelfPermission(Manifest.permission.CALL_PHONE) == PERMISSION_GRANTED
+    }
+
     /* Complex permission checks */
 
     @JvmStatic
@@ -195,8 +195,8 @@ object PermissionHandler {
         return checkAccessFineLocation(context) // we don't want coarse, fine means GPS.
     }
 
-    fun checkCallsPermissions(context: Context): Boolean {
-        return checkAccessReadPhoneState(context) && checkAccessCallPhone(context) && checkAccessReadCallLog(context)
+    fun checkCallLoggingPermissions(context: Context): Boolean {
+        return checkAccessReadPhoneState(context) && checkAccessReadCallLog(context)
     }
 
     fun checkTextsPermissions(context: Context): Boolean {
@@ -224,8 +224,8 @@ object PermissionHandler {
     }
 
     @JvmStatic
-    fun confirmCalls(context: Context): Boolean {
-        return PersistentData.getCallsEnabled() && checkCallsPermissions(context)
+    fun confirmCallLogging(context: Context): Boolean {
+        return PersistentData.getCallLoggingEnabled() && checkCallLoggingPermissions(context)
     }
 
     @JvmStatic
@@ -277,11 +277,11 @@ object PermissionHandler {
         }
 
         // read phone numbers was introduced in O, only check it if on O or higher, otherwise its read_phone_state
-        if (PersistentData.getCallsEnabled() && Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+        if (PersistentData.getCallLoggingEnabled() && Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             if (!checkAccessReadPhoneNumbers(context)) return Manifest.permission.READ_PHONE_NUMBERS
         }
 
-        if (PersistentData.getCallsEnabled()) {
+        if (PersistentData.getCallLoggingEnabled()) {
             if (!checkAccessReadPhoneState(context)) return Manifest.permission.READ_PHONE_STATE
             if (!checkAccessReadCallLog(context)) return Manifest.permission.READ_CALL_LOG
         }
@@ -297,7 +297,7 @@ object PermissionHandler {
 
         // The phone call permission is dependent on the presence of either phone number being present
         if ((PersistentData.getCallClinicianButtonEnabled() || PersistentData.getCallResearchAssistantButtonEnabled())
-                && !checkAccessCallPhone(context)) {
+                && !checkCanMakePhoneCall(context)) {
             return Manifest.permission.CALL_PHONE
         }
 
@@ -378,7 +378,7 @@ object PermissionHandler {
         permissions.put("permission_bluetooth_admin", checkAccessBluetoothAdmin(context))
         permissions.put("permission_bluetooth_connect", checkAccessBluetoothConnect(context))
         permissions.put("permission_bluetooth_scan", checkAccessBluetoothScan(context))
-        permissions.put("permission_call_phone", checkAccessCallPhone(context))
+        permissions.put("permission_call_phone", checkCanMakePhoneCall(context))
         permissions.put("permission_post_notifications", checkAccessNotifications(context))
         permissions.put("permission_read_call_log", checkAccessReadCallLog(context))
         permissions.put("permission_read_contacts", checkAccessReadContacts(context))
