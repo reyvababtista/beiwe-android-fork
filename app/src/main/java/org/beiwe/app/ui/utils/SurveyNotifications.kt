@@ -362,6 +362,11 @@ object SurveyNotifications {
         val notificationManager = appContext.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
         notificationManager.cancel(surveyId.hashCode())
         PersistentData.setSurveyNotificationState(surveyId, false)
+        // if there are no future alarms / alarms at all set for a survey (as can occur when a
+        // relative or absolute surveys that age-out of the weekly timings list) the survey timer
+        // will become stuck in the "on" state.  setting it to this (long maximum) value will
+        // prevent the survey from being instantly triggered.
+        PersistentData.setMostRecentSurveyAlarmTime(surveyId, 9223372036854775807L)
     }
 
     fun isNotificationActive(appContext: Context, surveyId: String): Boolean {
