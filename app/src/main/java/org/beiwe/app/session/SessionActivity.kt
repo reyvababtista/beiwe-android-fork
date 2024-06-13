@@ -12,6 +12,7 @@ import org.beiwe.app.ui.registration.ResetPasswordActivity
 import org.beiwe.app.ui.user.AboutActivityLoggedIn
 import org.beiwe.app.ui.user.GraphActivity
 import org.beiwe.app.ui.user.LoginActivity
+import org.beiwe.app.ui.user.MainMenuActivity
 
 /**All Activities in the app WHICH REQUIRE THE USER TO BE LOGGED IN extend this Activity.
  * If the user is not logged in, he/she is bumped to a login screen.
@@ -58,8 +59,11 @@ open class SessionActivity : RunningBackgroundServiceActivity() {
     protected fun authenticateAndLoginIfNecessary() {
         if (PersistentData.isLoggedIn())
             MainService.startAutomaticLogoutCountdownTimer()
-        else
+        else {
+            val activityIntent = Intent(this, LoginActivity::class.java)
+            activityIntent.flags = Intent.FLAG_ACTIVITY_CLEAR_TOP
             startActivity(Intent(this, LoginActivity::class.java))
+        }
     }
 
     /** Display the LoginActivity, and invalidate the login in SharedPreferences  */

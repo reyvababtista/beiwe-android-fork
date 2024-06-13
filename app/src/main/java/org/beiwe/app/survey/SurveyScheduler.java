@@ -9,6 +9,7 @@ import org.beiwe.app.CrashHandler;
 import org.beiwe.app.JSONUtils;
 import org.beiwe.app.R;
 import org.beiwe.app.storage.PersistentData;
+import org.beiwe.app.ui.utils.SurveyNotifications;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -43,10 +44,12 @@ public class SurveyScheduler {
 		// Log.i("SurveyScheduler", "id: " + surveyId + ", survey settings: " + surveySettings );
 		if (surveySettings.optBoolean(appContext.getString(R.string.triggeredSurvey), false)) {
 			// Log.i("SurveyScheduler", "it's triggered! yaaay!");
-			appContext.sendBroadcast(new Intent(surveyId));
+			// appContext.sendBroadcast(new Intent(surveyId));
+			SurveyNotifications.displaySurveyNotification(appContext, surveyId);
 		}
 	}
 	
+	// parses the json timings array
 	public static void scheduleSurvey (String surveyId) {
 		int today;
 		JSONArray JSONTimes;
@@ -100,6 +103,8 @@ public class SurveyScheduler {
 		// we iterate through the nested list to come to the next time that is after right now.
 		Calendar newAlarmTime = findNextAlarmTime(timesList);
 		if (newAlarmTime == null) {
+			// We DO NOT want to dismiss any active notifications here, that would break the push
+			// notification button on the website.
 			// Log.w("SurveyScheduler", "there were no times at all in the provided timings list.");
 			return;
 		}

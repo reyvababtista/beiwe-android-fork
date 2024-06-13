@@ -13,7 +13,7 @@ import org.beiwe.app.storage.TextFileManager
 import org.beiwe.app.survey.QuestionFragment.OnGoToNextQuestionListener
 import org.beiwe.app.survey.SurveySubmitFragment.OnSubmitButtonClickedListener
 import org.beiwe.app.ui.user.MainMenuActivity
-import org.beiwe.app.ui.utils.SurveyNotifications.dismissNotification
+import org.beiwe.app.ui.utils.SurveyNotifications.dismissSurveyNotification
 import org.json.JSONArray
 import org.json.JSONException
 import org.json.JSONObject
@@ -165,7 +165,7 @@ class SurveyActivity : SessionActivity(), OnGoToNextQuestionListener, OnSubmitBu
         Toast.makeText(applicationContext, toastMsg, Toast.LENGTH_LONG).show()
 
         // Close the Activity
-        dismissNotification(applicationContext, surveyId!!)
+        dismissSurveyNotification(applicationContext, surveyId!!)
         val activityIntent = Intent(applicationContext, MainMenuActivity::class.java)
         activityIntent.flags = Intent.FLAG_ACTIVITY_CLEAR_TOP
         startActivity(activityIntent)

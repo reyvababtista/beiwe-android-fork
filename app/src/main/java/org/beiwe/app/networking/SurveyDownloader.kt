@@ -9,7 +9,7 @@ import org.beiwe.app.MainService.Companion.registerTimers
 import org.beiwe.app.R
 import org.beiwe.app.storage.PersistentData
 import org.beiwe.app.survey.SurveyScheduler
-import org.beiwe.app.ui.utils.SurveyNotifications.dismissNotification
+import org.beiwe.app.ui.utils.SurveyNotifications.dismissSurveyNotification
 import org.beiwe.app.ui.utils.SurveyNotifications.showSurveyNotifications
 import org.json.JSONArray
 import org.json.JSONException
@@ -62,7 +62,8 @@ object SurveyDownloader {
             Log.e("Survey Downloader", "JSON PARSING FAIL FAIL FAIL")
             return -1
         }
-        // var surveyJSON: JSONObject
+
+        // go through the list of surveys, updating or creating as necessary.
         val oldSurveyIds = PersistentData.getSurveyIds()
         val newSurveyIds = ArrayList<String>()
 
@@ -149,6 +150,7 @@ object SurveyDownloader {
             }
         }
 
+        // remove any surveys that are no longer present.
         for (oldSurveyId in oldSurveyIds) { // for each old survey id
             if (!newSurveyIds.contains(oldSurveyId)) {
                 // check if it is still a valid survey (it the list of new survey ids.)
@@ -158,8 +160,8 @@ object SurveyDownloader {
                 // survey. They are one-time, and there is de minimus value to actually cancelling
                 // it. Also, that requires accessing the main service, which means using ugly hacks
                 // like we do with the survey scheduler (though it would be okay because this code
-                // can only actually run if the main service is already instantiated.
-                dismissNotification(appContext, oldSurveyId)
+                // can only actually run if the main service is already instantiated.)
+                dismissSurveyNotification(appContext, oldSurveyId)
                 registerTimers(appContext)
             }
         }

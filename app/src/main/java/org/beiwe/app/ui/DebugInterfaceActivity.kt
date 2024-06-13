@@ -372,6 +372,7 @@ class DebugInterfaceActivity : SessionActivity() {
 
     //ui operations
     fun loadMainMenu(view: View?) {
+        // this is correct, we do not want to include extra flags here.
         startActivity(Intent(this.applicationContext, MainMenuActivity::class.java))
     }
 
@@ -515,6 +516,6 @@ class DebugInterfaceActivity : SessionActivity() {
 
     fun clearNotifications(view: View?) {
         for (surveyId in PersistentData.getSurveyIds())
-            SurveyNotifications.dismissNotification(this.applicationContext, surveyId)
+            SurveyNotifications.dismissSurveyNotification(this.applicationContext, surveyId)
     }
 }

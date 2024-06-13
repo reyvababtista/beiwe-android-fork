@@ -407,16 +407,19 @@ class MainService : Service() {
                     timer!!.setupExactSingleAlarm(30000L, Timer.checkForCallsEnabledIntent)
             }
 
-            // TODO: convert to state-based check logic - for now this can stay here, I believe it
-            //  will result in only some notifictation ~weirdness
+
+            // This code has been removed, the app now explicitly checks app state, and the call
+            // to send this particular broadcast is no longer used. We will retain this for now
+            // (June 2024) in case we had a real good reason for retaining this pattern now that
+            // survey state checking.
             // checks if the action is the id of a survey (expensive), if so pop up the notification
             // for that survey, schedule the next alarm.
-            if (PersistentData.getSurveyIds().contains(broadcastAction)) {
-                // Log.i("MAIN SERVICE", "new notification: " + broadcastAction);
-                displaySurveyNotification(applicationContext, broadcastAction!!)
-                SurveyScheduler.scheduleSurvey(broadcastAction)
-                return
-            }
+            // if (PersistentData.getSurveyIds().contains(broadcastAction)) {
+            //     // Log.i("MAIN SERVICE", "new notification: " + broadcastAction);
+            //     displaySurveyNotification(applicationContext, broadcastAction!!)
+            //     SurveyScheduler.scheduleSurvey(broadcastAction)
+            //     return
+            // }
 
             // these are special actions that will only run if the app device is in debug mode.
             if (broadcastAction == "crashBeiwe" && BuildConfig.APP_IS_BETA) {

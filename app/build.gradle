@@ -137,7 +137,7 @@ Version history:
     because something either changed in the deep magic of android permissions code, or the
     directions have always been wrong and nobody noticed. hooray.
 79: 3.5.8 - Adds a bunch of app state tracking info.
-80: 3.5.9 - Potential bug fix for null intents that may have been causing random, frequent crashes.
+80: 3.5.9 - Potential bug fix for null intents that may have been causing random, frequent  crashes.
     Power state listener ported to kotlin (with a similar fix to a similar potential bug).
 81: 3.5.10 - 2 ~features - no more enforcement of phone number permission, consent page now accepts empty
     string, we no longer require phone permissions as an invariant post-registration permission either.
@@ -151,6 +151,14 @@ Version history:
       status of active push notifications.
     Fixes bug where the back stack was incorrectly updated after a survey was completed causing the
       Main Menu activity to be on the back stack twice, which also caused the button state to be wrong.
+      Also removes the use of a broadcast receiver to update the main menu.
+    Fixes a bug where a survey notification would be instantly reinstantiated after the survey
+      was completed if the survey had no weekly scheduled times and was triggered via the internal
+      app timers. This could occur on relative and absolute schedule surveys because when the
+      "buffer" of "this week's surveys" encounters an absolute or relative scheduled survey with
+      nothing in the next week... it sends an appropriately empty schedule listing for that survey.
+      In this situation the app does not update the tracked "trigger alarm time" timestamp when a
+      survey is completed, so a survey trigger "in the past" was always found when the app checked.
     Fixes a bug where the permissions check for the call log data stream was erroneously checking
       whether the ability to make a phone call was granted.
 

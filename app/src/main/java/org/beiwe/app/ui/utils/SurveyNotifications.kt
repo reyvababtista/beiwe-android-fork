@@ -358,7 +358,7 @@ object SurveyNotifications {
      * @param appContext
      * @param surveyId */
     @JvmStatic
-    fun dismissNotification(appContext: Context, surveyId: String) {
+    fun dismissSurveyNotification(appContext: Context, surveyId: String) {
         val notificationManager = appContext.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
         notificationManager.cancel(surveyId.hashCode())
         PersistentData.setSurveyNotificationState(surveyId, false)
