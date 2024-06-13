@@ -69,7 +69,7 @@ class MainMenuActivity : SessionActivity() {
                     surveyIds.add(surveyId)
                 }
             } catch (e: JSONException) {
-                printe("survey $surveyId broke inside json parsing")
+                // printe("survey $surveyId broke inside json parsing")
                 e.printStackTrace()
             }
         }
@@ -117,7 +117,7 @@ class MainMenuActivity : SessionActivity() {
             val button = findViewById<View>(resources.getIdentifier(
                 "permSurvey$i", "id", this.packageName)) as Button
             button.visibility = View.GONE
-            printi("setting button visibility for permSurvey$i to GONE")
+            // printi("setting button visibility for permSurvey$i to GONE")
         }
     }
 
@@ -126,7 +126,7 @@ class MainMenuActivity : SessionActivity() {
     // to create a new object every time it is called, breaking removeCallbacks.
     val mainUiUpdater: Runnable by lazy {
         Runnable {
-            printi("update_main_buttons")
+            // printi("update_main_buttons")
             runOnUiThread {
                 setupSurveyList()
             }
