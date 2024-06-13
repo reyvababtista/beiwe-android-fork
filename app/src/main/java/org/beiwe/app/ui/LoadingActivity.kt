@@ -75,13 +75,23 @@ class LoadingActivity : RunningBackgroundServiceActivity() {
     private fun loadingSequence() {
         //if the device is not registered, push the user to the register activity
         if (!PersistentData.getIsRegistered()) {
-            startActivity(Intent(this, RegisterActivity::class.java))
+            val activityIntent = Intent(this, RegisterActivity::class.java)
+            activityIntent.flags = Intent.FLAG_ACTIVITY_CLEAR_TOP
+            startActivity(activityIntent)
         } else {
-            if (BuildConfig.APP_IS_BETA)
-                startActivity(Intent(this, DebugInterfaceActivity::class.java))
-            else
-                startActivity(Intent(this, MainMenuActivity::class.java))
+            if (BuildConfig.APP_IS_BETA) {
+                // beta builds go to debug interface
+                val activityIntent = Intent(applicationContext, DebugInterfaceActivity::class.java)
+                activityIntent.flags = Intent.FLAG_ACTIVITY_CLEAR_TOP
+                startActivity(activityIntent)
+            } else {
+                // the normal case: registered users go to the main menu
+                val activityIntent = Intent(applicationContext, MainMenuActivity::class.java)
+                activityIntent.flags = Intent.FLAG_ACTIVITY_CLEAR_TOP
+                startActivity(activityIntent)
+            }
         }
+
         unbindService(mainServiceConnection2)
         finish() //destroy the loading screen
     }

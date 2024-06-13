@@ -9,6 +9,7 @@ import android.view.View
 import android.widget.Button
 import kotlinx.android.synthetic.main.activity_main_menu.main_menu_call_clinician
 import org.beiwe.app.R
+import org.beiwe.app.printe
 import org.beiwe.app.printi
 import org.beiwe.app.session.SessionActivity
 import org.beiwe.app.storage.PersistentData
@@ -68,6 +69,7 @@ class MainMenuActivity : SessionActivity() {
                     surveyIds.add(surveyId)
                 }
             } catch (e: JSONException) {
+                printe("survey $surveyId broke inside json parsing")
                 e.printStackTrace()
             }
         }

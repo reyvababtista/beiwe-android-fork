@@ -151,7 +151,7 @@ Version history:
       status of active push notifications.
     Fixes bug where the back stack was incorrectly updated after a survey was completed causing the
       Main Menu activity to be on the back stack twice, which also caused the button state to be wrong.
-      Also removes the use of a broadcast receiver to update the main menu.
+      Also removes the use of a broadcast receiver to update the active surveys and notifications.
     Fixes a bug where a survey notification would be instantly reinstantiated after the survey
       was completed if the survey had no weekly scheduled times and was triggered via the internal
       app timers. This could occur on relative and absolute schedule surveys because when the

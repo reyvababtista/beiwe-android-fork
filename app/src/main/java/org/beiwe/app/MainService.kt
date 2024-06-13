@@ -75,7 +75,6 @@ class MainService : Service() {
         background_handlerThread.start()
         background_looper = background_handlerThread.looper
         background_handler = Handler(background_looper)
-
     }
 
     /*##############################################################################################
@@ -712,10 +711,10 @@ class MainService : Service() {
 
     fun do_new_device_settings_check(now: Long) {
         val event_string = getString(R.string.check_for_new_device_settings_intent)
-        val dowwnload_device_settings_action = {
+        val download_device_settings_action = {
             SetDeviceSettings.dispatchUpdateDeviceSettings()
         }
-        do_an_event_session_check(now, event_string, DEVICE_SETTINGS_UPDATE_PERIODICITY, dowwnload_device_settings_action)
+        do_an_event_session_check(now, event_string, DEVICE_SETTINGS_UPDATE_PERIODICITY, download_device_settings_action)
     }
 
     /** Checks for the current expected state for survey notifications, and the app state for
