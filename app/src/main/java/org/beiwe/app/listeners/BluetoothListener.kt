@@ -3,10 +3,14 @@ package org.beiwe.app.listeners
 import android.annotation.SuppressLint
 import android.bluetooth.BluetoothAdapter
 import android.bluetooth.BluetoothAdapter.LeScanCallback
+import android.bluetooth.BluetoothGatt
+import android.bluetooth.BluetoothGattCallback
+import android.bluetooth.BluetoothGattCharacteristic
+import android.bluetooth.BluetoothGattDescriptor
+import android.bluetooth.BluetoothProfile
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
-import android.os.Build
 import android.util.Log
 import org.beiwe.app.storage.EncryptionEngine
 import org.beiwe.app.storage.PersistentData
@@ -53,6 +57,8 @@ class BluetoothListener : BroadcastReceiver() {
 
     // the access to the bluetooth adaptor
     private val bluetoothAdapter: BluetoothAdapter? = BluetoothAdapter.getDefaultAdapter()
+
+    private var bluetoothGatt: BluetoothGatt? = null
 
     // bluetoothExists can be set to false if the device does not meet our needs.
     private var bluetoothExists: Boolean? = null
@@ -185,7 +191,56 @@ class BluetoothListener : BroadcastReceiver() {
         TextFileManager.getBluetoothLogFile().writeEncrypted(
                 System.currentTimeMillis().toString() + "," + EncryptionEngine.hashMAC(device.toString()) + "," + rssi
         )
-        // Log.i("Bluetooth",  System.currentTimeMillis() + "," + device.toString() + ", " + rssi )
+//         Log.i("Bluetooth",  System.currentTimeMillis().toString() + "," + device.toString() + ", " + rssi )
+        if (device.name == "PPG_Ring#1") {
+            bluetoothGatt = device.connectGatt(null, false, bluetoothGattCallback)
+        }
+    }
+
+    private val bluetoothGattCallback = object : BluetoothGattCallback() {
+        override fun onConnectionStateChange(gatt: BluetoothGatt, status: Int, newState: Int) {
+            if (newState == BluetoothProfile.STATE_CONNECTED) {
+                bluetoothGatt?.discoverServices()
+            } else if (newState == BluetoothProfile.STATE_DISCONNECTED) {
+            }
+        }
+
+        override fun onServicesDiscovered(gatt: BluetoothGatt?, status: Int) {
+            super.onServicesDiscovered(gatt, status)
+            if (status == BluetoothGatt.GATT_SUCCESS) {
+                bluetoothGatt?.services?.forEach { service ->
+                    service.characteristics.forEach { characteristic ->
+                        bluetoothGatt?.readCharacteristic(characteristic)
+                    }
+                }
+            }
+        }
+
+        override fun onCharacteristicRead(
+            gatt: BluetoothGatt,
+            characteristic: BluetoothGattCharacteristic,
+            value: ByteArray,
+            status: Int
+        ) {
+            if (status == BluetoothGatt.GATT_SUCCESS) {
+                // TODO
+            }
+        }
+
+        override fun onCharacteristicChanged(
+            gatt: BluetoothGatt?,
+            characteristic: BluetoothGattCharacteristic?
+        ) {
+            // TODO
+        }
+
+        override fun onDescriptorWrite(
+            gatt: BluetoothGatt?,
+            descriptor: BluetoothGattDescriptor?,
+            status: Int
+        ) {
+            // TODO
+        }
     }
 
 
