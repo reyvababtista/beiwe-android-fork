@@ -19,14 +19,14 @@ import java.nio.ByteBuffer
 import java.nio.ByteOrder
 import java.util.UUID
 
-class OmniringService : Service() {
+class OmniringListener : Service() {
     private var bluetoothAdapter: BluetoothAdapter? = null
     private var bluetoothGatt: BluetoothGatt? = null
     private var connectionState = STATE_DISCONNECTED
     var bluetoothLeScanner: BluetoothLeScanner? = null
 
     companion object {
-        private const val TAG = "BLEService"
+        private const val TAG = "OmniringListener"
         const val ACTION_GATT_CONNECTED =
             "dev.rbabtista.kmm_phenotyping.external.ACTION_GATT_CONNECTED"
         const val ACTION_GATT_DISCONNECTED =
