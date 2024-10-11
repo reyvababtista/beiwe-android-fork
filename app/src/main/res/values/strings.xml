@@ -194,6 +194,8 @@
     <string name="turn_gyroscope_on" translatable="false">Gyroscope On</string>
     <string name="turn_bluetooth_off" translatable="false">Bluetooth OFF</string>
     <string name="turn_bluetooth_on" translatable="false">Bluetooth On</string>
+    <string name="turn_omniring_off" translatable="false">Omniring OFF</string>
+    <string name="turn_omniring_on" translatable="false">Omniring On</string>
     <string name="turn_gps_off" translatable="false">GPS OFF</string>
     <string name="turn_gps_on" translatable="false">GPS On</string>
     <string name="signout_intent" translatable="false">Signout</string>

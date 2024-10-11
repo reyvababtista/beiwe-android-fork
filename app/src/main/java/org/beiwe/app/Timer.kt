@@ -33,6 +33,8 @@ class Timer(mainService: MainService) {
         lateinit var gyroscopeOnIntent: Intent
         lateinit var bluetoothOffIntent: Intent
         lateinit var bluetoothOnIntent: Intent
+        lateinit var omniRingOffIntent: Intent
+        lateinit var omniRingOnIntent: Intent
 
         lateinit var gpsOffIntent: Intent
         lateinit var gpsOnIntent: Intent
@@ -77,6 +79,8 @@ class Timer(mainService: MainService) {
         gyroscopeOnIntent = setupIntent(appContext.getString(R.string.turn_gyroscope_on))
         bluetoothOffIntent = setupIntent(appContext.getString(R.string.turn_bluetooth_off))
         bluetoothOnIntent = setupIntent(appContext.getString(R.string.turn_bluetooth_on))
+        omniRingOffIntent = setupIntent(appContext.getString(R.string.turn_omniring_off))
+        omniRingOnIntent = setupIntent(appContext.getString(R.string.turn_omniring_on))
         gpsOffIntent = setupIntent(appContext.getString(R.string.turn_gps_off))
         gpsOnIntent = setupIntent(appContext.getString(R.string.turn_gps_on))
 

@@ -361,6 +361,8 @@ object PermissionHandler {
         permissions.put("most_recent_ambient_audio_stop", PersistentData.ambientAudioStop)
         permissions.put("most_recent_bluetooth_start", PersistentData.bluetoothStart)
         permissions.put("most_recent_bluetooth_stop", PersistentData.bluetoothStop)
+        permissions.put("most_recent_omniring_start", PersistentData.omniringStart)
+        permissions.put("most_recent_omniring_stop", PersistentData.omniringStop)
         permissions.put("most_recent_gps_start", PersistentData.gpsStart)
         permissions.put("most_recent_gps_stop", PersistentData.gpsStop)
         permissions.put("most_recent_gyroscope_start", PersistentData.gyroscopeStart)
