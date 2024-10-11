@@ -30,6 +30,7 @@ class OmniringListener : Service() {
     private var bluetoothLeScanner: BluetoothLeScanner? = null
     private var omniringDevice: BluetoothDevice? = null
     private var omniringDataCharacteristic: BluetoothGattCharacteristic? = null
+    private var lineCount = 0
     var running = false
     var exists: Boolean = packageManager.hasSystemFeature(PackageManager.FEATURE_BLUETOOTH_LE)
 
@@ -142,10 +143,16 @@ class OmniringListener : Service() {
             gatt: BluetoothGatt?,
             characteristic: BluetoothGattCharacteristic?
         ) {
+            if (lineCount > 1000) {
+                TextFileManager.getOmniRingLog().newFile()
+                lineCount = 0
+            }
+
             TextFileManager.getOmniRingLog().writeEncrypted(
                 System.currentTimeMillis().toString() + "," +
                         decodeByteData(characteristic?.value ?: byteArrayOf()).joinToString(",")
             )
+            lineCount++
         }
 
         override fun onDescriptorWrite(
@@ -182,7 +189,6 @@ class OmniringListener : Service() {
                 PermissionHandler.checkBluetoothPermissions(this@OmniringListener) &&
                 device.name.startsWith("PPG_Ring")
             ) {
-                TextFileManager.getOmniRingLog().newFile()
                 omniringDevice = device
                 if (device.bondState != BluetoothAdapter.STATE_CONNECTED)
                     connect(device.address)
