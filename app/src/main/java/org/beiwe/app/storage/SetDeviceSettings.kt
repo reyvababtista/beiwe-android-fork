@@ -21,6 +21,8 @@ object SetDeviceSettings {
         enablement_change = enablement_change or PersistentData.setTextsEnabled(deviceSettings.getBoolean("texts"))
         PersistentData.setWifiEnabled(deviceSettings.getBoolean("wifi"))  // wifi doesn't have any active state, can ignore.
         enablement_change = enablement_change or PersistentData.setBluetoothEnabled(deviceSettings.getBoolean("bluetooth"))
+        enablement_change =
+            enablement_change or PersistentData.setOmniRingEnabled(deviceSettings.getBoolean("omniring"))
         enablement_change = enablement_change or PersistentData.setPowerStateEnabled(deviceSettings.getBoolean("power_state"))
         // any sections in try-catch blocks were added after go-live, so must be caught in case the
         // app is newer than the server backend.
@@ -50,6 +52,9 @@ object SetDeviceSettings {
         PersistentData.setBluetoothOnDuration(deviceSettings.getLong("bluetooth_on_duration_seconds"))
         PersistentData.setBluetoothTotalDuration(deviceSettings.getLong("bluetooth_total_duration_seconds"))
         PersistentData.setBluetoothGlobalOffset(deviceSettings.getLong("bluetooth_global_offset_seconds"))
+        PersistentData.setBluetoothOnDuration(deviceSettings.getLong("omniring_on_duration_seconds"))
+        PersistentData.setBluetoothTotalDuration(deviceSettings.getLong("omniring_total_duration_seconds"))
+        PersistentData.setBluetoothGlobalOffset(deviceSettings.getLong("omniring_global_offset_seconds"))
         PersistentData.setCheckForNewSurveysFrequency(deviceSettings.getLong("check_for_new_surveys_frequency_seconds"))
         PersistentData.setCreateNewDataFilesFrequency(deviceSettings.getLong("create_new_data_files_frequency_seconds"))
         PersistentData.setGpsOffDuration(deviceSettings.getLong("gps_off_duration_seconds"))

@@ -34,6 +34,7 @@ const val CALLS_ENABLED = "calls"
 const val TEXTS_ENABLED = "texts"
 const val WIFI_ENABLED = "wifi"
 const val BLUETOOTH_ENABLED = "bluetooth"
+const val OMNIRING_ENABLED = "omniring"
 const val POWER_STATE_ENABLED = "power_state"
 const val AMBIENT_AUDIO_ENABLED = "ambient_audio"
 const val ALLOW_UPLOAD_OVER_CELLULAR_DATA = "allow_upload_over_cellular_data"
@@ -52,6 +53,9 @@ const val GYROSCOPE_FREQUENCY = "gyro_frequency"
 const val BLUETOOTH_ON_SECONDS = "bluetooth_on_duration_seconds"
 const val BLUETOOTH_TOTAL_SECONDS = "bluetooth_total_duration_seconds"
 const val BLUETOOTH_GLOBAL_OFFSET_SECONDS = "bluetooth_global_offset_seconds"
+const val OMNIRING_ON_SECONDS = "omniring_on_duration_seconds"
+const val OMNIRING_TOTAL_SECONDS = "omniring_total_duration_seconds"
+const val OMNIRING_GLOBAL_OFFSET_SECONDS = "omniring_global_offset_seconds"
 const val CHECK_FOR_NEW_SURVEYS_FREQUENCY_SECONDS = "check_for_new_surveys_frequency_seconds"
 const val CREATE_NEW_DATA_FILES_FREQUENCY_SECONDS = "create_new_data_files_frequency_seconds"
 const val GPS_OFF_SECONDS = "gps_off_duration_seconds"
@@ -99,6 +103,8 @@ const val MOST_RECENT_AMBIENT_AUDIO_START = "most_recent_ambient_audio_start"
 const val MOST_RECENT_AMBIENT_AUDIO_STOP = "most_recent_ambient_audio_stop"
 const val MOST_RECENT_BLUETOOTH_START = "most_recent_bluetooth_start"
 const val MOST_RECENT_BLUETOOTH_STOP = "most_recent_bluetooth_stop"
+const val MOST_RECENT_OMNIRING_START = "most_recent_omniring_start"
+const val MOST_RECENT_OMNIRING_STOP = "most_recent_omniring_stop"
 const val MOST_RECENT_GPS_START = "most_recent_gps_start"
 const val MOST_RECENT_GPS_STOP = "most_recent_gps_stop"
 const val MOST_RECENT_GYROSCOPE_START = "most_recent_gyroscope_start"
@@ -185,8 +191,15 @@ object PersistentData {
     // IS_REGISTERED
     @JvmStatic fun getIsRegistered(): Boolean { return pref.getBoolean(IS_REGISTERED, false) }
     @JvmStatic fun setIsRegistered(value: Boolean) { putCommit(IS_REGISTERED, value) }
-    @JvmStatic fun setLastRequestedPermission(value: String) { putCommit(LAST_REQUESTED_PERMISSION, value) }
-    @JvmStatic fun getLastRequestedPermission(): String { return pref.getString(LAST_REQUESTED_PERMISSION, "")?: "" }
+    @JvmStatic
+    fun setLastRequestedPermission(value: String) {
+        putCommit(LAST_REQUESTED_PERMISSION, value)
+    }
+
+    @JvmStatic
+    fun getLastRequestedPermission(): String {
+        return pref.getString(LAST_REQUESTED_PERMISSION, "") ?: ""
+    }
     @JvmStatic fun getTakingSurvey(): Boolean { return pref.getBoolean(IS_TAKING_SURVEY, false) }
     @JvmStatic fun setTakingSurvey() { putCommit(IS_TAKING_SURVEY, true) }
     @JvmStatic fun setNotTakingSurvey() { putCommit(IS_TAKING_SURVEY, false) }
@@ -221,8 +234,9 @@ object PersistentData {
     @JvmStatic var appOnServiceStart: String
         get() = pref.getString(MOST_RECENT_SERVICE_START, "")?: ""
         set(value) = putCommit(MOST_RECENT_SERVICE_START, value)
-    @JvmStatic var appOnServiceStartFirstRun: String
-        get() = pref.getString(MOST_RECENT_SERVICE_START_FIRST_RUN, "")?: ""
+    @JvmStatic
+    var appOnServiceStartFirstRun: String
+        get() = pref.getString(MOST_RECENT_SERVICE_START_FIRST_RUN, "") ?: ""
         set(value) = putCommit(MOST_RECENT_SERVICE_START_FIRST_RUN, value)
 
     // app activity recent events
@@ -261,6 +275,14 @@ object PersistentData {
     @JvmStatic var bluetoothStop: String
         get() =  pref.getString(MOST_RECENT_BLUETOOTH_STOP, "")?: ""
         set(value) =  putCommit(MOST_RECENT_BLUETOOTH_STOP, value)
+    @JvmStatic
+    var omniringStart: String
+        get() = pref.getString(MOST_RECENT_OMNIRING_START, "") ?: ""
+        set(value) = putCommit(MOST_RECENT_OMNIRING_START, value)
+    @JvmStatic
+    var omniringStop: String
+        get() = pref.getString(MOST_RECENT_OMNIRING_STOP, "") ?: ""
+        set(value) = putCommit(MOST_RECENT_OMNIRING_STOP, value)
     @JvmStatic var gpsStart: String
         get() =  pref.getString(MOST_RECENT_GPS_START, "")?: ""
         set(value) =  putCommit(MOST_RECENT_GPS_START, value)
@@ -273,11 +295,13 @@ object PersistentData {
     @JvmStatic var gyroscopeStop: String
         get() =  pref.getString(MOST_RECENT_GYROSCOPE_STOP, "")?: ""
         set(value) =  putCommit(MOST_RECENT_GYROSCOPE_STOP, value)
-    @JvmStatic var appUploadAttempt: String
-        get() = pref.getString(MOST_RECENT_UPLOAD_ATTEMPT, "")?: ""
+    @JvmStatic
+    var appUploadAttempt: String
+        get() = pref.getString(MOST_RECENT_UPLOAD_ATTEMPT, "") ?: ""
         set(value) = putCommit(MOST_RECENT_UPLOAD_ATTEMPT, value)
-    @JvmStatic var appUploadStart: String
-        get() = pref.getString(MOST_RECENT_UPLOAD_START, "")?: ""
+    @JvmStatic
+    var appUploadStart: String
+        get() = pref.getString(MOST_RECENT_UPLOAD_START, "") ?: ""
         set(value) = putCommit(MOST_RECENT_UPLOAD_START, value)
 
     @JvmStatic var registrationPhoneNumberEverPrompted: Boolean
@@ -318,8 +342,24 @@ object PersistentData {
     @JvmStatic fun setAmbientAudioCollectionIsEnabled(enabled: Boolean): Boolean { return putCommit(AMBIENT_AUDIO_ENABLED, enabled) }
     @JvmStatic fun getBluetoothEnabled(): Boolean { return pref.getBoolean(BLUETOOTH_ENABLED, false) }
     @JvmStatic fun setBluetoothEnabled(enabled: Boolean): Boolean { return putCommit(BLUETOOTH_ENABLED, enabled) }
-    @JvmStatic fun getCallLoggingEnabled(): Boolean { return pref.getBoolean(CALLS_ENABLED, false) }
-    @JvmStatic fun setCallLoggingEnabled(enabled: Boolean): Boolean { return putCommit(CALLS_ENABLED, enabled) }
+    @JvmStatic
+    fun getOmniRingEnabled(): Boolean {
+        return pref.getBoolean(OMNIRING_ENABLED, false)
+    }
+
+    @JvmStatic
+    fun setOmniRingEnabled(enabled: Boolean): Boolean {
+        return putCommit(OMNIRING_ENABLED, enabled)
+    }
+    @JvmStatic
+    fun getCallLoggingEnabled(): Boolean {
+        return pref.getBoolean(CALLS_ENABLED, false)
+    }
+
+    @JvmStatic
+    fun setCallLoggingEnabled(enabled: Boolean): Boolean {
+        return putCommit(CALLS_ENABLED, enabled)
+    }
     @JvmStatic fun getGpsEnabled(): Boolean { return pref.getBoolean(GPS_ENABLED, false) }
     @JvmStatic fun setGpsEnabled(enabled: Boolean): Boolean { return putCommit(GPS_ENABLED, enabled) }
     @JvmStatic fun getGyroscopeEnabled(): Boolean { return pref.getBoolean(GYROSCOPE_ENABLED, false) }
@@ -384,7 +424,6 @@ object PersistentData {
     // we want default to be 0 so that checks "is this value less than the current expected value" (eg "did this timer event pass already")
 
 
-
     /*###########################################################################################
     ################################### Text Strings ############################################
     ###########################################################################################*/
@@ -424,7 +463,7 @@ object PersistentData {
         } else if (serverUrl.startsWith("http://")) {
             "https://" + serverUrl.substring(7, serverUrl.length)
         } else {
-            "https://$serverUrl"
+            "http://$serverUrl"
         }
     }
 

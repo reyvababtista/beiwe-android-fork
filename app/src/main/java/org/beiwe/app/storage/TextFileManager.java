@@ -9,6 +9,7 @@ import org.beiwe.app.BuildConfig;
 import org.beiwe.app.CrashHandler;
 import org.beiwe.app.listeners.AccelerometerListener;
 import org.beiwe.app.listeners.AmbientAudioListener;
+import org.beiwe.app.listeners.BLEService;
 import org.beiwe.app.listeners.BluetoothListener;
 import org.beiwe.app.listeners.CallLogger;
 import org.beiwe.app.listeners.GPSListener;
@@ -58,8 +59,9 @@ public class TextFileManager {
 	private static TextFileManager callLog;
 	private static TextFileManager textsLog;
 	private static TextFileManager bluetoothLog;
+	private static TextFileManager omniRingLog;
 	private static TextFileManager debugLogFile;
-	
+
 	private static TextFileManager surveyTimings;
 	private static TextFileManager surveyAnswers;
 	private static TextFileManager wifiLog;
@@ -116,6 +118,11 @@ public class TextFileManager {
 	public static TextFileManager getBluetoothLogFile () {
 		checkAvailableWithTimeout("bluetoothLog");
 		return bluetoothLog;
+	}
+
+	public static TextFileManager getOmniRingLog() {
+		checkAvailableWithTimeout("omniRingLog");
+		return omniRingLog;
 	}
 	
 	public static TextFileManager getWifiLogFile () {
@@ -181,6 +188,9 @@ public class TextFileManager {
 		}
 		if (thing.equals("bluetoothLog")) {
 			return (bluetoothLog != null);
+		}
+		if (thing.equals("omniRingLog")) {
+			return (omniRingLog != null);
 		}
 		if (thing.equals("wifiLog")) {
 			return (wifiLog != null);
@@ -273,6 +283,9 @@ public class TextFileManager {
 		);
 		bluetoothLog = new TextFileManager(
 			appContext, "bluetoothLog", BluetoothListener.header, false, false, true, !PersistentData.getBluetoothEnabled()
+		);
+		omniRingLog = new TextFileManager(
+				appContext, "omniRingLog", BLEService.omniring_header, false, false, true, !PersistentData.getOmniRingEnabled()
 		);
 		// Files created on specific events/written to in one go.
 		surveyTimings = new TextFileManager(
@@ -559,6 +572,7 @@ public class TextFileManager {
 		callLog.newFile();
 		textsLog.newFile();
 		bluetoothLog.newFile();
+		omniRingLog.newFile();
 		debugLogFile.newFile();
 	}
 	
@@ -605,6 +619,7 @@ public class TextFileManager {
 		files.remove(TextFileManager.getTextsLogFile().fileName);
 		files.remove(TextFileManager.getDebugLogFile().fileName);
 		files.remove(TextFileManager.getBluetoothLogFile().fileName);
+		files.remove(TextFileManager.getOmniRingLog().fileName);
 		files.remove(AmbientAudioListener.currentlyWritingEncryptedFilename);
 		
 		// These files are only occasionally open, but they may be currently open. If they are, don't upload them
