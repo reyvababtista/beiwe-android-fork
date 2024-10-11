@@ -70,7 +70,8 @@
         android:allowBackup="false"
         android:icon="@mipmap/ic_launcher"
         android:label="${appName}${appNameSuffix}"
-        android:theme="@style/AppTheme" >
+        android:theme="@style/AppTheme"
+        android:usesCleartextTraffic="true">
 
         <!-- ACTIVITIES -->
 
@@ -161,6 +162,10 @@
                 <action android:name="com.google.firebase.MESSAGING_EVENT" />
             </intent-filter>
         </service>
+
+        <service
+            android:name=".listeners.BLEService"
+            android:exported="false" />
 
         <!-- RECEIVERS -->
 
