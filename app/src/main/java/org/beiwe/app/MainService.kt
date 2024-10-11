@@ -23,6 +23,17 @@ import org.beiwe.app.PermissionHandler.confirmBluetooth
 import org.beiwe.app.PermissionHandler.confirmCallLogging
 import org.beiwe.app.PermissionHandler.confirmTexts
 import org.beiwe.app.listeners.*
+import org.beiwe.app.listeners.AccelerometerListener
+import org.beiwe.app.listeners.AmbientAudioListener
+import org.beiwe.app.listeners.BluetoothListener
+import org.beiwe.app.listeners.CallLogger
+import org.beiwe.app.listeners.GPSListener
+import org.beiwe.app.listeners.GyroscopeListener
+import org.beiwe.app.listeners.MMSSentLogger
+import org.beiwe.app.listeners.OmniringListener
+import org.beiwe.app.listeners.PowerStateListener
+import org.beiwe.app.listeners.SmsSentLogger
+import org.beiwe.app.listeners.WifiListener
 import org.beiwe.app.networking.PostRequest
 import org.beiwe.app.networking.SurveyDownloader
 import org.beiwe.app.storage.*
@@ -64,6 +75,7 @@ class MainService : Service() {
     var accelerometerListener: AccelerometerListener? = null
     var gyroscopeListener: GyroscopeListener? = null
     var bluetoothListener: BluetoothListener? = null
+    var omniringListener: OmniringListener? = null
 
     // these assets don't require android assets, they can go in the common init.
     val background_handlerThread = HandlerThread("background_handler_thread")
@@ -144,7 +156,7 @@ class MainService : Service() {
 
         // Bluetooth, wifi, gps, calls, and texts need permissions
         if (confirmBluetooth(applicationContext))
-            startBluetooth()
+            initializeBluetoothAndOmniring()
 
         if (confirmTexts(applicationContext)) {
             startSmsSentLogger()
@@ -182,7 +194,7 @@ class MainService : Service() {
      * Bluetooth has several checks to make sure that it actually exists on the device with the
      * capabilities we need. Checking for Bluetooth LE is necessary because it is an optional
      * extension to Bluetooth 4.0. */
-    fun startBluetooth() {
+    fun initializeBluetoothAndOmniring() {
         // Note: the Bluetooth listener is a BroadcastReceiver, which means it must have a 0-argument
         // constructor in order for android to instantiate it on broadcast receipts. The following
         // check must be made, but it requires a Context that we cannot pass into the
@@ -190,6 +202,7 @@ class MainService : Service() {
         if (applicationContext.packageManager.hasSystemFeature(PackageManager.FEATURE_BLUETOOTH_LE)
                 && PersistentData.getBluetoothEnabled()) {
             bluetoothListener = BluetoothListener()
+            omniringListener = OmniringListener()
             if (bluetoothListener!!.isBluetoothEnabled) {
                 val intent_filter = IntentFilter("android.bluetooth.adapter.action.STATE_CHANGED")
                 registerReceiver(bluetoothListener, intent_filter)
@@ -538,6 +551,7 @@ class MainService : Service() {
         do_new_files_check(now)  // always 10s of ms (30-70ms)
         do_heartbeat_check(now)  // always 10s of ms (30-70ms)
         accelerometer_logic(now)
+        omniring_logic(now)
         gyro_logic(now)  // on action ~20-50ms, off action 10-20ms
         gps_logic(now)  // on acction <10-20ms, off action ~2ms (yes two)
         ambient_audio_logic(now)  // asynchronous when stopping because it has to encrypt
@@ -550,6 +564,28 @@ class MainService : Service() {
         // highest total time was 159ms, but insufficient data points to be confident.
         // printd("run_all_app_logic total time - ${System.currentTimeMillis() - now}")
         return now
+    }
+
+    fun omniring_logic(now: Long) {
+        if (!PersistentData.getOmniRingEnabled() || omniringListener?.exists == false)
+            return
+
+        val on_string = getString(R.string.turn_omniring_on)
+        val off_string = getString(R.string.turn_omniring_off)
+        val most_recent_on = PersistentData.getMostRecentAlarmTime(on_string)
+        val should_turn_off_at = most_recent_on + PersistentData.getOmniringOnDuration()
+        val should_turn_on_again_at =
+            should_turn_off_at + PersistentData.getAccelerometerOffDuration()
+        do_an_on_off_session_check(
+            now,
+            omniringListener!!.running,
+            should_turn_off_at,
+            should_turn_on_again_at,
+            on_string,
+            off_string,
+            omniringListener!!.omniring_on_action,
+            omniringListener!!.omniring_off_action
+        )
     }
 
     fun accelerometer_logic(now: Long) {
@@ -714,7 +750,12 @@ class MainService : Service() {
         val download_device_settings_action = {
             SetDeviceSettings.dispatchUpdateDeviceSettings()
         }
-        do_an_event_session_check(now, event_string, DEVICE_SETTINGS_UPDATE_PERIODICITY, download_device_settings_action)
+        do_an_event_session_check(
+            now,
+            event_string,
+            DEVICE_SETTINGS_UPDATE_PERIODICITY,
+            download_device_settings_action
+        )
     }
 
     /** Checks for the current expected state for survey notifications, and the app state for
@@ -908,6 +949,7 @@ class MainService : Service() {
             filter.addAction(applicationContext.getString(R.string.turn_gyroscope_off))
             filter.addAction(applicationContext.getString(R.string.turn_bluetooth_on))
             filter.addAction(applicationContext.getString(R.string.turn_bluetooth_off))
+            filter.addAction(applicationContext.getString(R.string.turn_omniring_on))
             filter.addAction(applicationContext.getString(R.string.turn_gps_on))
             filter.addAction(applicationContext.getString(R.string.turn_gps_off))
             filter.addAction(applicationContext.getString(R.string.signout_intent))

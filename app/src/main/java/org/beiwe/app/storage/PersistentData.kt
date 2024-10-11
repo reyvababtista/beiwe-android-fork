@@ -395,6 +395,35 @@ object PersistentData {
     @JvmStatic fun setBluetoothOnDuration(seconds: Long) { putCommit(BLUETOOTH_ON_SECONDS, seconds) }
     @JvmStatic fun getBluetoothTotalDuration(): Long { return 1000L * pref.getLong(BLUETOOTH_TOTAL_SECONDS, (5 * 60).toLong()) }
     @JvmStatic fun setBluetoothTotalDuration(seconds: Long) { putCommit(BLUETOOTH_TOTAL_SECONDS, seconds) }
+    @JvmStatic
+    fun getOmniringGlobalOffset(): Long {
+        return 1000L * pref.getLong(OMNIRING_GLOBAL_OFFSET_SECONDS, (0 * 60).toLong())
+    }
+
+    @JvmStatic
+    fun setOmniringGlobalOffset(seconds: Long) {
+        putCommit(OMNIRING_GLOBAL_OFFSET_SECONDS, seconds)
+    }
+
+    @JvmStatic
+    fun getOmniringOnDuration(): Long {
+        return 1000L * pref.getLong(OMNIRING_ON_SECONDS, (1 * 60).toLong())
+    }
+
+    @JvmStatic
+    fun setOmniringOnDuration(seconds: Long) {
+        putCommit(OMNIRING_ON_SECONDS, seconds)
+    }
+
+    @JvmStatic
+    fun getOmniringTotalDuration(): Long {
+        return 1000L * pref.getLong(OMNIRING_TOTAL_SECONDS, (5 * 60).toLong())
+    }
+
+    @JvmStatic
+    fun setOmniringTotalDuration(seconds: Long) {
+        putCommit(OMNIRING_TOTAL_SECONDS, seconds)
+    }
     @JvmStatic fun getCheckForNewSurveysFrequency(): Long { return 1000L * pref.getLong(CHECK_FOR_NEW_SURVEYS_FREQUENCY_SECONDS, (24 * 60 * 60).toLong()) }
     @JvmStatic fun setCheckForNewSurveysFrequency(seconds: Long) { putCommit(CHECK_FOR_NEW_SURVEYS_FREQUENCY_SECONDS, seconds) }
     @JvmStatic fun getCreateNewDataFilesFrequency(): Long { return 1000L * pref.getLong(CREATE_NEW_DATA_FILES_FREQUENCY_SECONDS, (15 * 60).toLong()) }
