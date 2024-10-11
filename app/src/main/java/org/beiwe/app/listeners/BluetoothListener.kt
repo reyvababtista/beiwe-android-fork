@@ -2,12 +2,14 @@ package org.beiwe.app.listeners
 
 import android.annotation.SuppressLint
 import android.bluetooth.BluetoothAdapter
-import android.bluetooth.BluetoothGattService
+import android.bluetooth.BluetoothAdapter.LeScanCallback
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import android.util.Log
+import org.beiwe.app.storage.EncryptionEngine
 import org.beiwe.app.storage.PersistentData
+import org.beiwe.app.storage.TextFileManager
 import java.util.Date
 
 // import android.content.pm.PackageManager;
@@ -46,14 +48,10 @@ class BluetoothListener : BroadcastReceiver() {
         fun getScanActive(): Boolean {
             return scanActive
         }
-
-        private const val CLIENT_CHARACTERISTIC_CONFIG = "00002902-0000-1000-8000-00805f9b34fb"
-        private const val TAG = "BluetoothListener"
     }
 
     // the access to the bluetooth adaptor
     private val bluetoothAdapter: BluetoothAdapter? = BluetoothAdapter.getDefaultAdapter()
-    private var bluetoothService: BLEService? = null
 
     // bluetoothExists can be set to false if the device does not meet our needs.
     private var bluetoothExists: Boolean? = null
@@ -144,6 +142,7 @@ class BluetoothListener : BroadcastReceiver() {
         } else {
             enableBluetooth()
         }
+        TextFileManager.getBluetoothLogFile().newFile()
     }
 
     /** Intelligently and safely disables bluetooth.
@@ -158,19 +157,35 @@ class BluetoothListener : BroadcastReceiver() {
         }
         Log.i("BluetoothListener", "disable BLE scan.")
         scanActive = false
-//        bluetoothService?.bluetoothLeScanner?.stopScan(scanCallback)
+        bluetoothAdapter!!.stopLeScan(bluetoothCallback)
 //        disableBluetooth()
     }
 
     /** Intelligently ACTUALLY STARTS a Bluetooth LE scan.
      * If Bluetooth is available, start scanning.  Makes verbose logging statements  */
+    @Suppress("deprecation")
+    @SuppressLint("NewApi")
     private fun tryScanning() {
+        Log.i("bluetooth", "starting a scan: " + scanActive)
         if (isBluetoothEnabled) {
-            Log.i("bluetooth", "starting a scan: $scanActive")
-//            bluetoothService?.bluetoothLeScanner?.startScan(scanCallback)
+            if (bluetoothAdapter!!.startLeScan(bluetoothCallback)) { /*Log.d("bluetooth", "bluetooth LE scan started successfully.");*/
+            } else {
+                Log.w("bluetooth", "bluetooth LE scan NOT started successfully.")
+            }
         } else {
             Log.w("bluetooth", "bluetooth could not be enabled?")
         }
+    }
+
+    /** LeScanCallback is code that is run when a Bluetooth LE scan returns some data.
+     * We take the returned data and log it.  */
+    @SuppressLint("NewApi")
+    private val bluetoothCallback = LeScanCallback { device, rssi, scanRecord ->
+        TextFileManager.getBluetoothLogFile().writeEncrypted(
+            System.currentTimeMillis()
+                .toString() + "," + EncryptionEngine.hashMAC(device.toString()) + "," + rssi
+        )
+        // Log.i("Bluetooth",  System.currentTimeMillis() + "," + device.toString() + ", " + rssi )
     }
 
 
@@ -185,58 +200,57 @@ class BluetoothListener : BroadcastReceiver() {
      * Additionally, if a Bluetooth On notification comes in AND the scanActive variable is set to TRUE
      * we start a Bluetooth LE scan.  */
     override fun onReceive(context: Context, intent: Intent) {
+        val action = intent.action
+        if (action == BluetoothAdapter.ACTION_STATE_CHANGED) {
+            val state = intent.getIntExtra(BluetoothAdapter.EXTRA_STATE, BluetoothAdapter.ERROR)
+            if (state == BluetoothAdapter.ERROR) {
+                Log.e("bluetooth", "BLUETOOTH ADAPTOR ERROR?")
+            } else if (state == BluetoothAdapter.STATE_ON) {
+                // Log.i("bluetooth", "state change: on" );
+                if (scanActive)
+                    enableBLEScan()
 
-        when (intent.action) {
-            BLEService.ACTION_GATT_CONNECTED -> {
-                Log.d(TAG, "gatt connected")
-            }
+            } else if (state == BluetoothAdapter.STATE_TURNING_ON) {
+                // Log.i("bluetooth", "state change: turning on");
+                if (!internalBluetoothState)
+                    externalBluetoothState = true
 
-            BLEService.ACTION_GATT_DISCONNECTED -> {
-                Log.d(TAG, "gatt disconnected")
-            }
+            } else if (state == BluetoothAdapter.STATE_TURNING_OFF) {
+                // Log.i("bluetooth", "state change: turning off");
+                if (internalBluetoothState)
+                    externalBluetoothState = false
 
-            BLEService.ACTION_GATT_SERVICES_DISCOVERED -> {
-                Log.d(TAG, "gatt services discovered")
-                displayGattServices(bluetoothService?.getSupportedGattServices())
-            }
-
-            BLEService.ACTION_DATA_AVAILABLE -> {
-                intent.extras?.getString(BLEService.EXTRA_DATA)?.let {
-                    Log.d(TAG, "gatt data $it")
-                }
-            }
-
-            BluetoothAdapter.ACTION_STATE_CHANGED -> {
-                val state = intent.getIntExtra(BluetoothAdapter.EXTRA_STATE, BluetoothAdapter.ERROR)
-                if (state == BluetoothAdapter.ERROR) {
-                    Log.e("bluetooth", "BLUETOOTH ADAPTOR ERROR?")
-                } else if (state == BluetoothAdapter.STATE_ON) {
-                    val gattServiceIntent = Intent(context, BLEService::class.java)
-                    context.startService(gattServiceIntent)
-
-                    if (scanActive)
-                        enableBLEScan()
-
-                } else if (state == BluetoothAdapter.STATE_TURNING_ON) {
-                    if (!internalBluetoothState)
-                        externalBluetoothState = true
-
-                } else if (state == BluetoothAdapter.STATE_TURNING_OFF) {
-                    if (internalBluetoothState)
-                        externalBluetoothState = false
-
-                }
             }
         }
     }
 
-    private fun displayGattServices(gattServices: List<BluetoothGattService>?) {
-        gattServices?.forEach { service ->
-            Log.d(TAG, "gatt service: ${service.uuid}")
-            service.characteristics?.forEach { characteristic ->
-                Log.d(TAG, "gatt service characteristic: ${characteristic.uuid}")
-                bluetoothService?.readCharacteristic(characteristic)
-            }
-        }
-    }
+    /*###############################################################################
+    ############################# Debugging Code ####################################
+    ###############################################################################*/
+    // val state: String
+    //     get() {
+    //         if (!bluetoothExists!!)
+    //             return "does not exist."
+    //         val state = bluetoothAdapter!!.state
+    //         //		STATE_OFF, STATE_TURNING_ON, STATE_ON, STATE_TURNING_OFF
+    //         if (state == BluetoothAdapter.STATE_OFF)
+    //             return "off"
+    //         else if (state == BluetoothAdapter.STATE_TURNING_ON)
+    //             return "turning on"
+    //         else if (state == BluetoothAdapter.STATE_ON)
+    //             return "on"
+    //         else if (state == BluetoothAdapter.STATE_TURNING_OFF)
+    //             return "turning off"
+    //         else
+    //             return "getstate is broken, value was $state"
+    //     }
+    //
+    // fun bluetoothInfo() {
+    //     Log.i("bluetooth", "bluetooth existence: " + bluetoothExists.toString())
+    //     Log.i("bluetooth", "bluetooth enabled: " + isBluetoothEnabled)
+    //     // Log.i("bluetooth", "bluetooth address: " + bluetoothAdapter!!.address)
+    //     Log.i("bluetooth", "bluetooth state: " + state)
+    //     Log.i("bluetooth", "bluetooth scan mode: " + bluetoothAdapter.scanMode)
+    //     Log.i("bluetooth", "bluetooth bonded devices:" + bluetoothAdapter.bondedDevices)
+    // }
 }
