@@ -25,7 +25,9 @@ class OmniringListener : Service() {
     private var bluetoothAdapter: BluetoothAdapter? = null
     private var bluetoothGatt: BluetoothGatt? = null
     private var connectionState = STATE_DISCONNECTED
-    var bluetoothLeScanner: BluetoothLeScanner? = null
+    private var bluetoothLeScanner: BluetoothLeScanner? = null
+    private var OMNIRING_DATA_SERVICE_UUID = ""
+    var collecting = false
 
     companion object {
         private const val TAG = "OmniringListener"
@@ -45,12 +47,12 @@ class OmniringListener : Service() {
         return null
     }
 
-    fun unpackFByteArray(byteArray: ByteArray): Float {
+    private fun unpackFByteArray(byteArray: ByteArray): Float {
         val buffer = ByteBuffer.wrap(byteArray).order(ByteOrder.LITTLE_ENDIAN)
         return buffer.float
     }
 
-    fun decodeByteData(byteData: ByteArray): List<Float> {
+    private fun decodeByteData(byteData: ByteArray): List<Float> {
         val floatArray = mutableListOf<Float>()
         for (i in byteData.indices step 4) {
             val tmpFloat = unpackFByteArray(byteData.copyOfRange(i, i + 4))
@@ -61,17 +63,8 @@ class OmniringListener : Service() {
 
     private fun ByteArray.toHexString(): String = joinToString("") { "%02x".format(it) }
 
-    fun readCharacteristic(characteristic: BluetoothGattCharacteristic) {
-        bluetoothGatt?.let { gatt ->
-            gatt.readCharacteristic(characteristic)
-        } ?: run {
-            Log.w(TAG, "BluetoothGatt not initialized")
-            return
-        }
-    }
-
     // Disable notifications
-    fun disableNotification(
+    private fun disableNotification(
         serviceUUID: String,
         characteristicUUID: String
     ) {
@@ -90,7 +83,7 @@ class OmniringListener : Service() {
     }
 
     // Enable notifications
-    fun enableNotification(
+    private fun enableNotification(
         serviceUUID: String,
         characteristicUUID: String
     ) {
@@ -120,13 +113,14 @@ class OmniringListener : Service() {
                 Log.d(TAG, "subscribeToNotifications: characteristic found ${characteristic.uuid}")
 
                 if (characteristic.uuid.toString() == OMNIRING_DATA_CHARACTERISTIC_UUID) {
+                    OMNIRING_DATA_SERVICE_UUID = service.uuid.toString()
                     Log.d(
                         TAG,
                         "subscribeToNotifications: omniring data characteristic found, enabling notifications"
                     )
                     enableNotification(
-                        serviceUUID = service.uuid.toString(),
-                        characteristicUUID = characteristic.uuid.toString()
+                        serviceUUID = OMNIRING_DATA_SERVICE_UUID,
+                        characteristicUUID = OMNIRING_DATA_CHARACTERISTIC_UUID
                     )
                 }
             }
@@ -136,6 +130,9 @@ class OmniringListener : Service() {
     private val bluetoothGattCallback = object : BluetoothGattCallback() {
         override fun onServicesDiscovered(gatt: BluetoothGatt?, status: Int) {
             super.onServicesDiscovered(gatt, status)
+            if (collecting) {
+                subscribeToNotifications()
+            }
         }
 
         override fun onConnectionStateChange(gatt: BluetoothGatt, status: Int, newState: Int) {
@@ -172,7 +169,7 @@ class OmniringListener : Service() {
         }
     }
 
-    fun connect(address: String): Boolean {
+    private fun connect(address: String): Boolean {
         bluetoothAdapter?.let { adapter ->
             try {
                 val device = adapter.getRemoteDevice(address)
@@ -209,7 +206,7 @@ class OmniringListener : Service() {
         }
     }
 
-    fun initialize(): Boolean {
+    private fun initialize(): Boolean {
         Log.d(TAG, "initialize: init omniring")
         bluetoothAdapter = bluetoothManager.adapter
         if (bluetoothAdapter == null) {
