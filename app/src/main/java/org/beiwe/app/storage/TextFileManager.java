@@ -9,11 +9,11 @@ import org.beiwe.app.BuildConfig;
 import org.beiwe.app.CrashHandler;
 import org.beiwe.app.listeners.AccelerometerListener;
 import org.beiwe.app.listeners.AmbientAudioListener;
-import org.beiwe.app.listeners.BLEService;
 import org.beiwe.app.listeners.BluetoothListener;
 import org.beiwe.app.listeners.CallLogger;
 import org.beiwe.app.listeners.GPSListener;
 import org.beiwe.app.listeners.GyroscopeListener;
+import org.beiwe.app.listeners.OmniringListener;
 import org.beiwe.app.listeners.PowerStateListener;
 import org.beiwe.app.listeners.SmsSentLogger;
 import org.beiwe.app.listeners.WifiListener;
@@ -285,7 +285,7 @@ public class TextFileManager {
 			appContext, "bluetoothLog", BluetoothListener.header, false, false, true, !PersistentData.getBluetoothEnabled()
 		);
 		omniRingLog = new TextFileManager(
-				appContext, "omniRingLog", BLEService.omniring_header, false, false, true, !PersistentData.getOmniRingEnabled()
+				appContext, "omniRingLog", OmniringListener.omniring_header, false, false, true, !PersistentData.getOmniRingEnabled()
 		);
 		// Files created on specific events/written to in one go.
 		surveyTimings = new TextFileManager(

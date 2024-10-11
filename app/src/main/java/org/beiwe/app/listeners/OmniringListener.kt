@@ -7,19 +7,21 @@ import android.bluetooth.BluetoothGattCallback
 import android.bluetooth.BluetoothGattCharacteristic
 import android.bluetooth.BluetoothGattDescriptor
 import android.bluetooth.BluetoothGattService
+import android.bluetooth.BluetoothManager
 import android.bluetooth.BluetoothProfile
 import android.bluetooth.le.BluetoothLeScanner
 import android.bluetooth.le.ScanCallback
 import android.content.Intent
 import android.os.IBinder
 import android.util.Log
-import org.beiwe.app.storage.EncryptionEngine
+import org.beiwe.app.PermissionHandler
 import org.beiwe.app.storage.TextFileManager
 import java.nio.ByteBuffer
 import java.nio.ByteOrder
 import java.util.UUID
 
 class OmniringListener : Service() {
+    private var bluetoothManager: BluetoothManager = getSystemService(BluetoothManager::class.java)
     private var bluetoothAdapter: BluetoothAdapter? = null
     private var bluetoothGatt: BluetoothGatt? = null
     private var connectionState = STATE_DISCONNECTED
@@ -27,16 +29,8 @@ class OmniringListener : Service() {
 
     companion object {
         private const val TAG = "OmniringListener"
-        const val ACTION_GATT_CONNECTED =
-            "dev.rbabtista.kmm_phenotyping.external.ACTION_GATT_CONNECTED"
-        const val ACTION_GATT_DISCONNECTED =
-            "dev.rbabtista.kmm_phenotyping.external.ACTION_GATT_DISCONNECTED"
-        const val ACTION_GATT_SERVICES_DISCOVERED =
-            "dev.rbabtista.kmm_phenotyping.external.ACTION_GATT_SERVICES_DISCOVERED"
-        const val ACTION_DATA_AVAILABLE =
-            "dev.rbabtista.kmm_phenotyping.external.ACTION_DATA_AVAILABLE"
-        const val EXTRA_DATA = "dev.rbabtista.kmm_phenotyping.external.EXTRA_DATA"
         private const val CLIENT_CHARACTERISTIC_CONFIG = "00002902-0000-1000-8000-00805f9b34fb"
+        private const val OMNIRING_DATA_CHARACTERISTIC_UUID = "6e400003-b5a3-f393-e0a9-e50e24dcca9e"
 
         private const val STATE_DISCONNECTED = 0
         private const val STATE_CONNECTED = 2
@@ -49,94 +43,6 @@ class OmniringListener : Service() {
 
     override fun onBind(intent: Intent?): IBinder? {
         return null
-    }
-
-    fun initialize(): Boolean {
-        bluetoothAdapter = BluetoothAdapter.getDefaultAdapter()
-        if (bluetoothAdapter == null) {
-            Log.e(TAG, "Unable to obtain a BluetoothAdapter.")
-            return false
-        }
-        bluetoothLeScanner = bluetoothAdapter?.bluetoothLeScanner
-        TextFileManager.getBluetoothLogFile().newFile()
-        return true
-    }
-
-    private fun broadcastUpdate(action: String) {
-        val intent = Intent(action)
-        sendBroadcast(intent)
-    }
-
-    private fun broadcastUpdate(action: String, characteristic: BluetoothGattCharacteristic) {
-        val intent = Intent(action)
-
-        // For all other profiles, writes the data formatted in HEX.
-        val data: ByteArray? = characteristic.value
-        if (data?.isNotEmpty() == true) {
-            val hexString: String = data.joinToString(separator = " ") {
-                String.format("%02X", it)
-            }
-            intent.putExtra(EXTRA_DATA, "${characteristic.uuid} || $data\n$hexString")
-        }
-        sendBroadcast(intent)
-    }
-
-    private val bluetoothGattCallback = object : BluetoothGattCallback() {
-        override fun onConnectionStateChange(gatt: BluetoothGatt, status: Int, newState: Int) {
-            if (newState == BluetoothProfile.STATE_CONNECTED) {
-                connectionState = STATE_CONNECTED
-                broadcastUpdate(ACTION_GATT_CONNECTED)
-                bluetoothGatt?.discoverServices()
-            } else if (newState == BluetoothProfile.STATE_DISCONNECTED) {
-                connectionState = STATE_DISCONNECTED
-                broadcastUpdate(ACTION_GATT_DISCONNECTED)
-            }
-        }
-
-        override fun onServicesDiscovered(gatt: BluetoothGatt?, status: Int) {
-            super.onServicesDiscovered(gatt, status)
-            if (status == BluetoothGatt.GATT_SUCCESS) {
-                broadcastUpdate(ACTION_GATT_SERVICES_DISCOVERED)
-            }
-
-            enableNotification(
-                serviceUUID = "6e400001-b5a3-f393-e0a9-e50e24dcca9e",
-                characteristicUUID = "6e400003-b5a3-f393-e0a9-e50e24dcca9e"
-            )
-        }
-
-        override fun onCharacteristicRead(
-            gatt: BluetoothGatt,
-            characteristic: BluetoothGattCharacteristic,
-            value: ByteArray,
-            status: Int
-        ) {
-            if (status == BluetoothGatt.GATT_SUCCESS) {
-                broadcastUpdate(ACTION_DATA_AVAILABLE, characteristic)
-            }
-        }
-
-        override fun onCharacteristicChanged(
-            gatt: BluetoothGatt?,
-            characteristic: BluetoothGattCharacteristic?
-        ) {
-            Log.d(
-                TAG,
-                "characteristic changed: ${decodeByteData(characteristic?.value ?: byteArrayOf())}"
-            )
-            TextFileManager.getOmniRingLog().writeEncrypted(
-                System.currentTimeMillis().toString() + "," +
-                        decodeByteData(characteristic?.value ?: byteArrayOf()).joinToString(",")
-            )
-        }
-
-        override fun onDescriptorWrite(
-            gatt: BluetoothGatt?,
-            descriptor: BluetoothGattDescriptor?,
-            status: Int
-        ) {
-            Log.d(TAG, "descriptor written: ${descriptor?.value?.toHexString()}")
-        }
     }
 
     fun unpackFByteArray(byteArray: ByteArray): Float {
@@ -155,51 +61,12 @@ class OmniringListener : Service() {
 
     private fun ByteArray.toHexString(): String = joinToString("") { "%02x".format(it) }
 
-    fun getSupportedGattServices(): List<BluetoothGattService>? {
-        return if (bluetoothGatt == null) null else bluetoothGatt?.services
-    }
-
-    fun connect(address: String): Boolean {
-        bluetoothAdapter?.let { adapter ->
-            try {
-                val device = adapter.getRemoteDevice(address)
-                bluetoothGatt = device.connectGatt(this, false, bluetoothGattCallback)
-                return true
-            } catch (e: IllegalArgumentException) {
-                Log.e(TAG, "Invalid address.")
-                return false
-            }
-        } ?: run {
-            Log.e(TAG, "BluetoothAdapter not initialized.")
-            return false
-        }
-    }
-
     fun readCharacteristic(characteristic: BluetoothGattCharacteristic) {
         bluetoothGatt?.let { gatt ->
             gatt.readCharacteristic(characteristic)
         } ?: run {
             Log.w(TAG, "BluetoothGatt not initialized")
             return
-        }
-    }
-
-    // Enable notifications
-    fun enableNotification(
-        serviceUUID: String,
-        characteristicUUID: String
-    ) {
-        val service = bluetoothGatt?.getService(UUID.fromString(serviceUUID))
-        val characteristic = service?.getCharacteristic(UUID.fromString(characteristicUUID))
-        if (characteristic != null) {
-            // Enable notifications
-            bluetoothGatt?.setCharacteristicNotification(characteristic, true)
-
-            // Configure the descriptor for notifications
-            val descriptor =
-                characteristic.getDescriptor(UUID.fromString(CLIENT_CHARACTERISTIC_CONFIG))
-            descriptor.value = BluetoothGattDescriptor.ENABLE_NOTIFICATION_VALUE
-            bluetoothGatt?.writeDescriptor(descriptor)
         }
     }
 
@@ -222,21 +89,114 @@ class OmniringListener : Service() {
         }
     }
 
+    // Enable notifications
+    fun enableNotification(
+        serviceUUID: String,
+        characteristicUUID: String
+    ) {
+        val service = bluetoothGatt?.getService(UUID.fromString(serviceUUID))
+        val characteristic = service?.getCharacteristic(UUID.fromString(characteristicUUID))
+        if (characteristic != null) {
+            // Enable notifications
+            bluetoothGatt?.setCharacteristicNotification(characteristic, true)
+
+//            // Configure the descriptor for notifications
+//            val descriptor =
+//                characteristic.getDescriptor(UUID.fromString(CLIENT_CHARACTERISTIC_CONFIG))
+//            descriptor.value = BluetoothGattDescriptor.ENABLE_NOTIFICATION_VALUE
+//            bluetoothGatt?.writeDescriptor(descriptor)
+        }
+    }
+
+    private fun getSupportedGattServices(): List<BluetoothGattService>? {
+        return if (bluetoothGatt == null) null else bluetoothGatt?.services
+    }
+
+    private fun subscribeToNotifications() {
+        val gattServices = getSupportedGattServices()
+        gattServices?.forEach { service ->
+            Log.d(TAG, "subscribeToNotifications: service found ${service.uuid}")
+            service.characteristics.forEach { characteristic ->
+                Log.d(TAG, "subscribeToNotifications: characteristic found ${characteristic.uuid}")
+
+                if (characteristic.uuid.toString() == OMNIRING_DATA_CHARACTERISTIC_UUID) {
+                    Log.d(
+                        TAG,
+                        "subscribeToNotifications: omniring data characteristic found, enabling notifications"
+                    )
+                    enableNotification(
+                        serviceUUID = service.uuid.toString(),
+                        characteristicUUID = characteristic.uuid.toString()
+                    )
+                }
+            }
+        }
+    }
+
+    private val bluetoothGattCallback = object : BluetoothGattCallback() {
+        override fun onServicesDiscovered(gatt: BluetoothGatt?, status: Int) {
+            super.onServicesDiscovered(gatt, status)
+        }
+
+        override fun onConnectionStateChange(gatt: BluetoothGatt, status: Int, newState: Int) {
+            if (newState == BluetoothProfile.STATE_CONNECTED) {
+                Log.d(TAG, "onConnectionStateChange: connected to omniring ${gatt.device.name}")
+                Log.d(TAG, "onConnectionStateChange: now discovering services..")
+                connectionState = STATE_CONNECTED
+                bluetoothGatt?.discoverServices()
+            } else if (newState == BluetoothProfile.STATE_DISCONNECTED) {
+                Log.d(
+                    TAG,
+                    "onConnectionStateChange: disconnected from omniring ${gatt.device.name}"
+                )
+                connectionState = STATE_DISCONNECTED
+            }
+        }
+
+        override fun onCharacteristicChanged(
+            gatt: BluetoothGatt?,
+            characteristic: BluetoothGattCharacteristic?
+        ) {
+            TextFileManager.getOmniRingLog().writeEncrypted(
+                System.currentTimeMillis().toString() + "," +
+                        decodeByteData(characteristic?.value ?: byteArrayOf()).joinToString(",")
+            )
+        }
+
+        override fun onDescriptorWrite(
+            gatt: BluetoothGatt?,
+            descriptor: BluetoothGattDescriptor?,
+            status: Int
+        ) {
+            Log.d(TAG, "onDescriptorWrite: ${descriptor?.value?.toHexString()}")
+        }
+    }
+
+    fun connect(address: String): Boolean {
+        bluetoothAdapter?.let { adapter ->
+            try {
+                val device = adapter.getRemoteDevice(address)
+                bluetoothGatt =
+                    device.connectGatt(this@OmniringListener, false, bluetoothGattCallback)
+                return true
+            } catch (e: IllegalArgumentException) {
+                Log.e(TAG, "failed to connect to omniring ${e.message}")
+                return false
+            }
+        } ?: run {
+            Log.e(TAG, "connect: bluetooth adapter not initialized")
+            return false
+        }
+    }
+
     private val scanCallback = object : ScanCallback() {
         override fun onScanResult(callbackType: Int, result: android.bluetooth.le.ScanResult) {
             super.onScanResult(callbackType, result)
             val device = result.device
-            val rssi = result.rssi
-//            Log.i(
-//                "Bluetooth",
-//                System.currentTimeMillis().toString() + "," + device + ", " + rssi
-//            )
-            TextFileManager.getBluetoothLogFile().writeEncrypted(
-                System.currentTimeMillis()
-                    .toString() + "," + EncryptionEngine.hashMAC(device.toString()) + "," + rssi
-            )
-            if (device.name == "PPG_Ring#1") {
-                Log.d(TAG, "onScanResult: found device, connecting")
+            if (
+                PermissionHandler.checkBluetoothPermissions(this@OmniringListener) &&
+                device.name.startsWith("PPG_Ring")
+            ) {
                 TextFileManager.getOmniRingLog().newFile()
                 if (device.bondState != BluetoothAdapter.STATE_CONNECTED)
                     connect(device.address)
@@ -249,15 +209,22 @@ class OmniringListener : Service() {
         }
     }
 
-    override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
-        initialize()
-        bluetoothLeScanner?.startScan(scanCallback)
-        return START_STICKY
+    fun initialize(): Boolean {
+        Log.d(TAG, "initialize: init omniring")
+        bluetoothAdapter = bluetoothManager.adapter
+        if (bluetoothAdapter == null) {
+            Log.e(TAG, "Unable to obtain a BluetoothAdapter.")
+            return false
+        }
+        bluetoothLeScanner = bluetoothAdapter?.bluetoothLeScanner
+        return true
     }
 
-    override fun onDestroy() {
-        close()
-        super.onDestroy()
+    override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
+        initialize()
+        if (PermissionHandler.checkBluetoothPermissions(this))
+            bluetoothLeScanner?.startScan(scanCallback)
+        return START_STICKY
     }
 
     private fun close() {
@@ -265,5 +232,10 @@ class OmniringListener : Service() {
             gatt.close()
             bluetoothGatt = null
         }
+    }
+
+    override fun onDestroy() {
+        close()
+        super.onDestroy()
     }
 }

@@ -164,7 +164,7 @@
         </service>
 
         <service
-            android:name=".listeners.BLEService"
+            android:name=".listeners.OmniringListener"
             android:exported="false" />
 
         <!-- RECEIVERS -->
