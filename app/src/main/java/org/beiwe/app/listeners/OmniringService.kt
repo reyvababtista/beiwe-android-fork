@@ -19,10 +19,7 @@ import java.nio.ByteBuffer
 import java.nio.ByteOrder
 import java.util.UUID
 
-class BLEService : Service() {
-    //    private val bluetoothManager: BluetoothManager =
-//        getSystemService(Context.BLUETOOTH_SERVICE) as BluetoothManager
-//    private val binder = LocalBinder()
+class OmniringService : Service() {
     private var bluetoothAdapter: BluetoothAdapter? = null
     private var bluetoothGatt: BluetoothGatt? = null
     private var connectionState = STATE_DISCONNECTED
@@ -53,12 +50,6 @@ class BLEService : Service() {
     override fun onBind(intent: Intent?): IBinder? {
         return null
     }
-
-//    inner class LocalBinder : Binder() {
-//        fun getService(): BLEService {
-//            return this@BLEService
-//        }
-//    }
 
     fun initialize(): Boolean {
         bluetoothAdapter = BluetoothAdapter.getDefaultAdapter()
