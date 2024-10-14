@@ -14,6 +14,7 @@ import android.bluetooth.le.BluetoothLeScanner
 import android.bluetooth.le.ScanCallback
 import android.content.Intent
 import android.content.pm.PackageManager
+import android.os.Binder
 import android.os.IBinder
 import android.util.Log
 import org.beiwe.app.PermissionHandler
@@ -23,7 +24,7 @@ import java.nio.ByteOrder
 import java.util.UUID
 
 class OmniringListener : Service() {
-    private var bluetoothManager: BluetoothManager = getSystemService(BluetoothManager::class.java)
+    private var bluetoothManager: BluetoothManager? = null
     private var bluetoothAdapter: BluetoothAdapter? = null
     private var bluetoothGatt: BluetoothGatt? = null
     private var connectionState = STATE_DISCONNECTED
@@ -32,7 +33,7 @@ class OmniringListener : Service() {
     private var omniringDataCharacteristic: BluetoothGattCharacteristic? = null
     private var lineCount = 0
     var running = false
-    var exists: Boolean = packageManager.hasSystemFeature(PackageManager.FEATURE_BLUETOOTH_LE)
+    var exists: Boolean = false
 
     companion object {
         private const val TAG = "OmniringListener"
@@ -48,8 +49,15 @@ class OmniringListener : Service() {
 
     }
 
+    private val binder = LocalBinder()
+
+    inner class LocalBinder : Binder() {
+        // Return this instance of LocalService so clients can call public methods.
+        fun getService(): OmniringListener = this@OmniringListener
+    }
+
     override fun onBind(intent: Intent?): IBinder? {
-        return null
+        return binder
     }
 
     private fun unpackFByteArray(byteArray: ByteArray): Float {
@@ -111,6 +119,7 @@ class OmniringListener : Service() {
                         TAG,
                         "subscribeToNotifications: omniring data characteristic found, enabling notifications"
                     )
+                    enableNotification()
                 }
             }
         }
@@ -148,10 +157,9 @@ class OmniringListener : Service() {
                 lineCount = 0
             }
 
-            TextFileManager.getOmniRingLog().writeEncrypted(
-                System.currentTimeMillis().toString() + "," +
-                        decodeByteData(characteristic?.value ?: byteArrayOf()).joinToString(",")
-            )
+            val data = decodeByteData(characteristic?.value ?: byteArrayOf()).joinToString(",")
+            TextFileManager.getOmniRingLog()
+                .writeEncrypted(System.currentTimeMillis().toString() + "," + data)
             lineCount++
         }
 
@@ -187,7 +195,7 @@ class OmniringListener : Service() {
             val device = result.device
             if (
                 PermissionHandler.checkBluetoothPermissions(this@OmniringListener) &&
-                device.name.startsWith("PPG_Ring")
+                device.name?.startsWith("PPG_Ring") == true
             ) {
                 omniringDevice = device
                 if (device.bondState != BluetoothAdapter.STATE_CONNECTED)
@@ -197,13 +205,13 @@ class OmniringListener : Service() {
 
         override fun onScanFailed(errorCode: Int) {
             super.onScanFailed(errorCode)
-            Log.e("Bluetooth", "Scan failed with error code: $errorCode")
+            Log.e(TAG, "Scan failed with error code: $errorCode")
         }
     }
 
     private fun initialize(): Boolean {
         Log.d(TAG, "initialize: init omniring")
-        bluetoothAdapter = bluetoothManager.adapter
+        bluetoothAdapter = bluetoothManager?.adapter
         if (bluetoothAdapter == null) {
             Log.e(TAG, "Unable to obtain a BluetoothAdapter.")
             return false
@@ -213,15 +221,19 @@ class OmniringListener : Service() {
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
+        bluetoothManager = getSystemService(BLUETOOTH_SERVICE) as BluetoothManager
+        exists = packageManager.hasSystemFeature(PackageManager.FEATURE_BLUETOOTH_LE)
         initialize()
         return START_STICKY
     }
 
     val omniring_on_action: () -> Unit = {
+        Log.d(TAG, "omniring: on action called")
         if (bluetoothAdapter?.isEnabled == false) {
             Log.e(TAG, "Bluetooth is disabled.")
         } else {
             if (omniringDevice == null) {
+                Log.d(TAG, "starting scan")
                 bluetoothLeScanner?.startScan(scanCallback)
             }
 
@@ -236,6 +248,7 @@ class OmniringListener : Service() {
     }
 
     val omniring_off_action: () -> Unit = {
+        Log.d(TAG, "omniring: off action called")
         disableNotification()
     }
 

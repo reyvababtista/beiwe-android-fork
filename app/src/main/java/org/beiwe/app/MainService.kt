@@ -2,9 +2,11 @@ package org.beiwe.app
 
 import android.app.*
 import android.content.BroadcastReceiver
+import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
+import android.content.ServiceConnection
 import android.content.pm.PackageManager
 import android.graphics.Color
 import android.net.ConnectivityManager
@@ -189,6 +191,19 @@ class MainService : Service() {
     /*#############################################################################
 	#########################         Starters              #######################
 	#############################################################################*/
+    private val connection = object : ServiceConnection {
+        override fun onServiceConnected(className: ComponentName, service: IBinder) {
+            val binder = service as OmniringListener.LocalBinder
+            omniringListener = binder.getService()
+            Log.d("omniring", "onServiceConnected: omniringListener bound")
+        }
+
+        override fun onServiceDisconnected(arg0: ComponentName) {
+            omniringListener = null
+            Log.d("omniring", "onServiceConnected: omniringListener unbound")
+        }
+    }
+
 
     /** Initializes the Bluetooth listener
      * Bluetooth has several checks to make sure that it actually exists on the device with the
@@ -199,25 +214,38 @@ class MainService : Service() {
         // constructor in order for android to instantiate it on broadcast receipts. The following
         // check must be made, but it requires a Context that we cannot pass into the
         // BluetoothListener, so we do the check in the BackgroundService.
-        if (applicationContext.packageManager.hasSystemFeature(PackageManager.FEATURE_BLUETOOTH_LE)
-                && PersistentData.getBluetoothEnabled()) {
-            bluetoothListener = BluetoothListener()
-            omniringListener = OmniringListener()
-            if (bluetoothListener!!.isBluetoothEnabled) {
-                val intent_filter = IntentFilter("android.bluetooth.adapter.action.STATE_CHANGED")
-                registerReceiver(bluetoothListener, intent_filter)
-            } else {
-                // TODO: Track down why this error occurs, cleanup.  The above check should be for
-                //  the (new) doesBluetoothCapabilityExist function instead of isBluetoothEnabled
-                Log.e("Main Service", BLLUETOOTH_MESSAGE_1)
-                TextFileManager.writeDebugLogStatement(BLLUETOOTH_MESSAGE_1)
+        if (applicationContext.packageManager.hasSystemFeature(PackageManager.FEATURE_BLUETOOTH_LE)) {
+            if (PersistentData.getBluetoothEnabled()) {
+                bluetoothListener = BluetoothListener()
+                if (bluetoothListener!!.isBluetoothEnabled) {
+                    val intent_filter =
+                        IntentFilter("android.bluetooth.adapter.action.STATE_CHANGED")
+                    registerReceiver(bluetoothListener, intent_filter)
+                } else {
+                    // TODO: Track down why this error occurs, cleanup.  The above check should be for
+                    //  the (new) doesBluetoothCapabilityExist function instead of isBluetoothEnabled
+                    Log.e("Main Service", BLLUETOOTH_MESSAGE_1)
+                    TextFileManager.writeDebugLogStatement(BLLUETOOTH_MESSAGE_1)
+                }
+            }
+            if (PersistentData.getOmniRingEnabled()) {
+                val intent = Intent(this, OmniringListener::class.java).also { intent ->
+                    bindService(intent, connection, Context.BIND_AUTO_CREATE)
+                }
+                Log.d("omniring", "initializeBluetoothAndOmniring: starting omniring")
+                startService(intent)
             }
         } else {
             if (PersistentData.getBluetoothEnabled()) {
                 TextFileManager.writeDebugLogStatement(BLLUETOOTH_MESSAGE_2)
                 Log.w("MainS bluetooth init", BLLUETOOTH_MESSAGE_2)
             }
+            if (PersistentData.getOmniRingEnabled()) {
+                TextFileManager.writeDebugLogStatement(BLLUETOOTH_MESSAGE_2)
+                Log.w("MainS omniring init", BLLUETOOTH_MESSAGE_2)
+            }
             bluetoothListener = null
+            omniringListener = null
         }
     }
 
@@ -551,7 +579,8 @@ class MainService : Service() {
         do_new_files_check(now)  // always 10s of ms (30-70ms)
         do_heartbeat_check(now)  // always 10s of ms (30-70ms)
         accelerometer_logic(now)
-        omniring_logic(now)
+        if (omniringListener != null)
+            omniring_logic(now)
         gyro_logic(now)  // on action ~20-50ms, off action 10-20ms
         gps_logic(now)  // on acction <10-20ms, off action ~2ms (yes two)
         ambient_audio_logic(now)  // asynchronous when stopping because it has to encrypt
