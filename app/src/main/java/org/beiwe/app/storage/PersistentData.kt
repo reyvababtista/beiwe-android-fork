@@ -492,7 +492,7 @@ object PersistentData {
         } else if (serverUrl.startsWith("http://")) {
             "https://" + serverUrl.substring(7, serverUrl.length)
         } else {
-            "http://$serverUrl"
+            "https://$serverUrl"
         }
     }
 
