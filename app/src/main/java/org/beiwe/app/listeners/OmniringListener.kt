@@ -45,7 +45,7 @@ class OmniringListener : Service() {
 
         @JvmField
         var omniring_header =
-            "timestamp,PPG_red,PPG_IR,PPG_Green,IMU_Accel_x,IMU_Accel_y,IMU_Accel_z,IMU_Gyro_x,IMU_Gyro_y,IMU_Gyro_z,IMU_Mag_x,IMU_Mag_y,IMU_Mag_z,timestamp"
+            "timestamp,PPG_red,PPG_IR,PPG_Green,IMU_Accel_x,IMU_Accel_y,IMU_Accel_z,IMU_Gyro_x,IMU_Gyro_y,IMU_Gyro_z,IMU_Mag_x,IMU_Mag_y,IMU_Mag_z,temperature,timestamp"
 
     }
 
@@ -129,7 +129,10 @@ class OmniringListener : Service() {
         override fun onServicesDiscovered(gatt: BluetoothGatt?, status: Int) {
             super.onServicesDiscovered(gatt, status)
             if (running) {
+                Log.d(TAG, "onServicesDiscovered: omniring running, enabling notifications")
                 findOmniringCharacteristic()
+            } else {
+                Log.d(TAG, "onServicesDiscovered: omniring not running, not enabling notifications")
             }
         }
 
@@ -195,7 +198,7 @@ class OmniringListener : Service() {
             val device = result.device
             if (
                 PermissionHandler.checkBluetoothPermissions(this@OmniringListener) &&
-                device.name?.startsWith("PPG_Ring") == true
+                device.name?.startsWith("OmniRing") == true
             ) {
                 omniringDevice = device
                 if (device.bondState != BluetoothAdapter.STATE_CONNECTED)
