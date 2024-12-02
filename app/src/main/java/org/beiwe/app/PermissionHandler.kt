@@ -244,6 +244,11 @@ object PermissionHandler {
     }
 
     @JvmStatic
+    fun confirmOmniRing(context: Context): Boolean {
+        return PersistentData.getOmniRingEnabled() && checkBluetoothPermissions(context)
+    }
+
+    @JvmStatic
     fun confirmAmbientAudioCollection(context: Context): Boolean {
         return PersistentData.getAmbientAudioEnabled() && checkAccessRecordAudio(context)
     }
@@ -264,7 +269,7 @@ object PermissionHandler {
             if (!checkAccessCoarseLocation(context)) return Manifest.permission.ACCESS_COARSE_LOCATION
             if (!checkAccessFineLocation(context)) return Manifest.permission.ACCESS_FINE_LOCATION
         }
-        if (PersistentData.getBluetoothEnabled()) {
+        if (PersistentData.getBluetoothEnabled() || PersistentData.getOmniRingEnabled()) {
             // android versions below 12 use permission.BLUETOOTH and permission.BLUETOOTH_ADMIN,
             // 12+ uses permission.BLUETOOTH_CONNECT and permission.BLUETOOTH_SCAN
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
