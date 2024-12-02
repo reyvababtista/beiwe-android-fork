@@ -463,14 +463,14 @@ class MainService : Service() {
      * check. (we pad with an extra second to ensure that check hits an inflection point where
      * action is required.) */
     fun do_an_on_off_session_check(
-            now: Long,
-            is_running: Boolean,
-            should_turn_off_at: Long,
-            should_turn_on_again_at: Long,
-            identifier_string: String,
-            intent_off_string: String,
-            on_action: () -> Unit,
-            off_action: () -> Unit,
+        now: Long,
+        is_running: Boolean,
+        should_turn_off_at: Long,
+        should_turn_on_at: Long,
+        intent_on_string: String,
+        intent_off_string: String,
+        on_action: () -> Unit,
+        off_action: () -> Unit,
     ) {
         // val t1 = System.currentTimeMillis()
         if (is_running && now <= should_turn_off_at) {
@@ -483,28 +483,28 @@ class MainService : Service() {
         if (is_running && should_turn_off_at < now) {
             // printi("'$identifier_string' time to turn off")
             off_action()
-            val should_turn_on_again_at_safe = should_turn_on_again_at + 1000 // add a second to ensure we pass the timer
-            print("setting ON TIMER for $identifier_string to $should_turn_on_again_at_safe")
-            timer!!.setupSingleAlarmAt(should_turn_on_again_at_safe, Timer.intent_map[identifier_string]!!)
+            val should_turn_on_at_safe = should_turn_on_at + 1000 // add a second to ensure we pass the timer
+            print("Sensor listener service turned off. Next $intent_on_string is scheduled to ${convertTimestamp(should_turn_on_at_safe)}")
+            timer!!.setupSingleAlarmAt(should_turn_on_at_safe, Timer.intent_map[intent_on_string]!!)
             // printv("'$identifier_string - turn off - ${System.currentTimeMillis() - t1}")
         }
 
         // not_running, should turn on is still in the future, do nothing
-        if (!is_running && should_turn_on_again_at >= now) {
+        if (!is_running && should_turn_on_at >= now) {
             // printw("'$identifier_string' correctly off")
             // printv("'$identifier_string - correctly off - ${System.currentTimeMillis() - t1}")
             return
         }
 
         // not running, should be on, (on is in the past)
-        if (!is_running && should_turn_on_again_at < now) {
+        if (!is_running && should_turn_on_at < now) {
             // always get the current time, the now value could be stale - unlikely but possible we
             // care that we get data, not that data be rigidly accurate to a clock.
-            PersistentData.setMostRecentAlarmTime(identifier_string, System.currentTimeMillis())
+            PersistentData.setMostRecentAlarmTime(intent_on_string, System.currentTimeMillis())
             // printe("'$identifier_string' turn it on!")
             on_action()
             val should_turn_off_at_safe = should_turn_off_at + 1000  // add a second to ensure we pass the timer
-            print("setting OFF TIMER for $identifier_string to $should_turn_off_at_safe")
+            print("Sensor listener service turned on. Next $intent_off_string is scheduled to ${convertTimestamp(should_turn_off_at_safe)}")
             timer!!.setupSingleAlarmAt(should_turn_off_at_safe, Timer.intent_map[intent_off_string]!!)
             // printv("'$identifier_string - on action - ${System.currentTimeMillis() - t1}")
         }
@@ -776,7 +776,7 @@ class MainService : Service() {
             startForeground(1, notification)
             foregroundServiceLastStarted = now
         }
-        
+
         PersistentData.serviceStartCommand = Date(System.currentTimeMillis()).toLocaleString()
 
         // onStartCommand is called every 30 seconds due to repeating high-priority-or-whatever
