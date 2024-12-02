@@ -3,8 +3,12 @@ package org.beiwe.app
 import android.app.PendingIntent
 import android.content.Context
 import android.content.res.Configuration
+import android.icu.text.SimpleDateFormat
+import android.icu.util.TimeZone
 import android.os.Build
 import android.util.Log
+import java.util.Date
+import java.util.Locale
 
 // This file is a location for new static functions, further factoring into files will occur when length of file becomes a problem.
 
@@ -69,4 +73,14 @@ fun is_nightmode(appContext: Context): Boolean {
             return false
     }
     return false
+}
+
+/**
+ * Converts a UTC timestamp to a human-readable date and time string, based on current device's timezone.
+ */
+fun convertTimestamp(utcTimestamp: Long): String {
+    val date = Date(utcTimestamp)
+    val dateFormat = SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault())
+    dateFormat.timeZone = TimeZone.getDefault()
+    return dateFormat.format(date)
 }
