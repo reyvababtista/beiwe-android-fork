@@ -24,7 +24,6 @@ import org.beiwe.app.PermissionHandler.checkBluetoothPermissions
 import org.beiwe.app.PermissionHandler.confirmBluetooth
 import org.beiwe.app.PermissionHandler.confirmCallLogging
 import org.beiwe.app.PermissionHandler.confirmTexts
-import org.beiwe.app.listeners.*
 import org.beiwe.app.listeners.AccelerometerListener
 import org.beiwe.app.listeners.AmbientAudioListener
 import org.beiwe.app.listeners.BluetoothListener
@@ -607,7 +606,7 @@ class MainService : Service() {
             should_turn_off_at + PersistentData.getAccelerometerOffDuration()
         do_an_on_off_session_check(
             now,
-            omniringListener!!.running,
+            omniringListener!!.isOnState,
             should_turn_off_at,
             should_turn_on_again_at,
             on_string,

@@ -32,7 +32,7 @@ class OmniringListener : Service() {
     private var omniringDevice: BluetoothDevice? = null
     private var omniringDataCharacteristic: BluetoothGattCharacteristic? = null
     private var lineCount = 0
-    var running = false
+    var isOnState = false
     var exists: Boolean = false
 
     companion object {
@@ -86,7 +86,6 @@ class OmniringListener : Service() {
             characteristic.getDescriptor(UUID.fromString(CLIENT_CHARACTERISTIC_CONFIG))
         descriptor.value = BluetoothGattDescriptor.DISABLE_NOTIFICATION_VALUE
         bluetoothGatt?.writeDescriptor(descriptor)
-        running = false
     }
 
     // Enable notifications
@@ -99,7 +98,6 @@ class OmniringListener : Service() {
             characteristic.getDescriptor(UUID.fromString(CLIENT_CHARACTERISTIC_CONFIG))
         descriptor.value = BluetoothGattDescriptor.ENABLE_NOTIFICATION_VALUE
         bluetoothGatt?.writeDescriptor(descriptor)
-        running = true
     }
 
     private fun getSupportedGattServices(): List<BluetoothGattService>? {
@@ -119,7 +117,8 @@ class OmniringListener : Service() {
                         TAG,
                         "subscribeToNotifications: omniring data characteristic found, enabling notifications"
                     )
-                    enableNotification()
+                    if (isOnState) enableNotification() else disableNotification()
+                    return
                 }
             }
         }
@@ -128,12 +127,7 @@ class OmniringListener : Service() {
     private val bluetoothGattCallback = object : BluetoothGattCallback() {
         override fun onServicesDiscovered(gatt: BluetoothGatt?, status: Int) {
             super.onServicesDiscovered(gatt, status)
-            if (running) {
-                Log.d(TAG, "onServicesDiscovered: omniring running, enabling notifications")
-                findOmniringCharacteristic()
-            } else {
-                Log.d(TAG, "onServicesDiscovered: omniring not running, not enabling notifications")
-            }
+            findOmniringCharacteristic()
         }
 
         override fun onConnectionStateChange(gatt: BluetoothGatt, status: Int, newState: Int) {
@@ -161,6 +155,7 @@ class OmniringListener : Service() {
             }
 
             val data = decodeByteData(characteristic?.value ?: byteArrayOf()).joinToString(",")
+            Log.d(TAG, "onCharacteristicChanged: $data")
             TextFileManager.getOmniRingLog()
                 .writeEncrypted(System.currentTimeMillis().toString() + "," + data)
             lineCount++
@@ -195,10 +190,14 @@ class OmniringListener : Service() {
     private val scanCallback = object : ScanCallback() {
         override fun onScanResult(callbackType: Int, result: android.bluetooth.le.ScanResult) {
             super.onScanResult(callbackType, result)
+            if (omniringDevice != null && omniringDevice?.bondState == BluetoothAdapter.STATE_CONNECTED) {
+                return
+            }
+
             val device = result.device
             if (
                 PermissionHandler.checkBluetoothPermissions(this@OmniringListener) &&
-                device.name?.startsWith("OmniRing") == true
+                device.name?.startsWith("OmniRing") == true // TODO: refactor this condition to be dynamically set by backend
             ) {
                 omniringDevice = device
                 if (device.bondState != BluetoothAdapter.STATE_CONNECTED)
@@ -232,25 +231,25 @@ class OmniringListener : Service() {
 
     val omniring_on_action: () -> Unit = {
         Log.d(TAG, "omniring: on action called")
+        isOnState = true
         if (bluetoothAdapter?.isEnabled == false) {
             Log.e(TAG, "Bluetooth is disabled.")
         } else {
             if (omniringDevice == null) {
                 Log.d(TAG, "starting scan")
                 bluetoothLeScanner?.startScan(scanCallback)
-            }
-
-            if (omniringDevice != null && connectionState == STATE_DISCONNECTED) {
+            } else if (connectionState == STATE_DISCONNECTED) {
                 connect(omniringDevice?.address ?: "")
-            }
-
-            if (omniringDataCharacteristic != null) {
+            } else if (omniringDataCharacteristic == null) {
+                findOmniringCharacteristic()
+            } else {
                 enableNotification()
             }
         }
     }
 
     val omniring_off_action: () -> Unit = {
+        isOnState = false
         Log.d(TAG, "omniring: off action called")
         disableNotification()
     }
