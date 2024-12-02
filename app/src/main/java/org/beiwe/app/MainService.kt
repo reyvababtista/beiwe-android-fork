@@ -23,6 +23,7 @@ import io.sentry.dsn.InvalidDsnException
 import org.beiwe.app.PermissionHandler.checkBluetoothPermissions
 import org.beiwe.app.PermissionHandler.confirmBluetooth
 import org.beiwe.app.PermissionHandler.confirmCallLogging
+import org.beiwe.app.PermissionHandler.confirmOmniRing
 import org.beiwe.app.PermissionHandler.confirmTexts
 import org.beiwe.app.listeners.AccelerometerListener
 import org.beiwe.app.listeners.AmbientAudioListener
@@ -157,7 +158,10 @@ class MainService : Service() {
 
         // Bluetooth, wifi, gps, calls, and texts need permissions
         if (confirmBluetooth(applicationContext))
-            initializeBluetoothAndOmniring()
+            initializeBluetooth()
+
+        if (confirmOmniRing(applicationContext))
+            initializeOmniRing()
 
         if (confirmTexts(applicationContext)) {
             startSmsSentLogger()
@@ -208,7 +212,7 @@ class MainService : Service() {
      * Bluetooth has several checks to make sure that it actually exists on the device with the
      * capabilities we need. Checking for Bluetooth LE is necessary because it is an optional
      * extension to Bluetooth 4.0. */
-    fun initializeBluetoothAndOmniring() {
+    fun initializeBluetooth() {
         // Note: the Bluetooth listener is a BroadcastReceiver, which means it must have a 0-argument
         // constructor in order for android to instantiate it on broadcast receipts. The following
         // check must be made, but it requires a Context that we cannot pass into the
@@ -227,6 +231,17 @@ class MainService : Service() {
                     TextFileManager.writeDebugLogStatement(BLLUETOOTH_MESSAGE_1)
                 }
             }
+        } else {
+            if (PersistentData.getBluetoothEnabled()) {
+                TextFileManager.writeDebugLogStatement(BLLUETOOTH_MESSAGE_2)
+                Log.w("MainS bluetooth init", BLLUETOOTH_MESSAGE_2)
+            }
+            bluetoothListener = null
+        }
+    }
+
+    fun initializeOmniRing() {
+        if (applicationContext.packageManager.hasSystemFeature(PackageManager.FEATURE_BLUETOOTH_LE)) {
             if (PersistentData.getOmniRingEnabled()) {
                 val intent = Intent(this, OmniringListener::class.java).also { intent ->
                     bindService(intent, connection, Context.BIND_AUTO_CREATE)
@@ -235,15 +250,10 @@ class MainService : Service() {
                 startService(intent)
             }
         } else {
-            if (PersistentData.getBluetoothEnabled()) {
-                TextFileManager.writeDebugLogStatement(BLLUETOOTH_MESSAGE_2)
-                Log.w("MainS bluetooth init", BLLUETOOTH_MESSAGE_2)
-            }
             if (PersistentData.getOmniRingEnabled()) {
                 TextFileManager.writeDebugLogStatement(BLLUETOOTH_MESSAGE_2)
                 Log.w("MainS omniring init", BLLUETOOTH_MESSAGE_2)
             }
-            bluetoothListener = null
             omniringListener = null
         }
     }
