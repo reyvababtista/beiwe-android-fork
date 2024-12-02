@@ -601,9 +601,9 @@ class MainService : Service() {
         val on_string = getString(R.string.turn_omniring_on)
         val off_string = getString(R.string.turn_omniring_off)
         val most_recent_on = PersistentData.getMostRecentAlarmTime(on_string)
-        val should_turn_off_at = most_recent_on + PersistentData.getOmniringOnDuration()
+        val should_turn_off_at = most_recent_on + PersistentData.getOmniRingOnDuration()
         val should_turn_on_again_at =
-            should_turn_off_at + PersistentData.getAccelerometerOffDuration()
+            should_turn_off_at + PersistentData.getOmniRingOffDuration()
         do_an_on_off_session_check(
             now,
             omniringListener!!.isOnState,
